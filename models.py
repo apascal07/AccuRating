@@ -3,23 +3,27 @@ from google.appengine.ext import ndb
 
 class Review(ndb.Model):
   """A Review object contains a single review for a single product."""
-  rating = ndb.FloatProperty(indexed=False)
-  text = ndb.TextProperty(indexed=False)
+  # data retrieved from scraping the Amazon pages
+  rating = ndb.FloatProperty(indexed=False, required=True)
+  text = ndb.TextProperty(indexed=False, required=True)
+  reviewer = ndb.KeyProperty(indexed=False, key='Reviewer', required=True)
+  product = ndb.KeyProperty(indexed=False, key='Product', required=True)
+  good_vote_count = ndb.IntegerProperty(indexed=False, required=True)
+  total_vote_count = ndb.IntegerProperty(indexed=False, required=True)
+  verified = ndb.BooleanProperty(indexed=False, required=True)
+  timestamp = ndb.DateTimeProperty(indexed=False, required=True)
+  # data computed by the system
   text_quality = ndb.FloatProperty(indexed=False)
-  reviewer = ndb.KeyProperty(key='Reviewer', indexed=False)
-  product = ndb.KeyProperty(key='Product', indexed=False)
-  good_vote_count = ndb.IntegerProperty(indexed=False)
-  total_vote_count = ndb.IntegerProperty(indexed=False)
-  verified = ndb.BooleanProperty(indexed=False)
-  timestamp = ndb.DateTimeProperty(indexed=False, auto_now_add=False)
   weight = ndb.FloatProperty(indexed=False)
 
 class Reviewer(ndb.Model):
   """A Reviewer object contains all of the data associated with a reviewer."""
-  name = ndb.StringProperty(indexed=True)
-  rank = ndb.IntegerProperty(indexed=False)
-  vote_count = ndb.IntegerProperty(indexed=False)
+  # data retrieved from scraping the Amazon pages
+  name = ndb.StringProperty(indexed=True, required=True)
+  rank = ndb.IntegerProperty(indexed=False, required=True)
+  vote_count = ndb.IntegerProperty(indexed=False, required=True)
   reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
+  # data computed by the system
   creation_date = ndb.DateTimeProperty(indexed=False)
   average_rating = ndb.FloatProperty(indexed=False)
   standard_deviation = ndb.FloatProperty(indexed=False)
@@ -27,37 +31,26 @@ class Reviewer(ndb.Model):
 
 class Product(ndb.Model):
   """A Product object contains meta data and references to its reviews."""
-  title = ndb.StringProperty(indexed=False)
+  # data retrieved from scraping the Amazon pages
+  title = ndb.StringProperty(indexed=True, required=True)
   description = ndb.TextProperty(indexed=False)
-  reviews = ndb.KeyProperty(key='Review', repeated=True)
-  amazon_rating = ndb.FloatProperty(indexed=False)
+  reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
+  release_date = ndb.DateTimeProperty(indexed=False, required=True)
+  category = ndb.StringProperty(indexed=False, required=True)
+  rating_distribution = ndb.PickleProperty(indexed=False, required=True)
+  amazon_rating = ndb.FloatProperty(indexed=False, required=True)
+  # data computed by the system
   average_rating = ndb.FloatProperty(indexed=False)
   weighted_rating = ndb.FloatProperty(indexed=False)
-  category = ndb.StringProperty(indexed=False)
-  release_date = ndb.DateTimeProperty(indexed=False, auto_now_add=False)
-
-  def set_average(self):
-    """Computes the simple average of all of the reviews."""
-    total = 0.0
-    count = len(reviews)
-    for review_key in reviews:
-      review = review_key.get()
-      total += review.rating
-    average = total / count
-    self.average_rating = average
-
-  def get_average(self):
-    """Computes, if not set, then retrieves the simple average."""
-    if not self.average_rating:
-      set_average()
-    return self.average_rating
 
 class TrainingSet(ndb.Model):
   """A TrainingSet object contains meta data about a training attempt."""
   start_timestamp = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
   end_timestamp = ndb.DateTimeProperty(indexed=False)
+  criteria = ndb.PickleProperty(indexed=False)
+  review_count_limit = ndb.IntegerProperty(indexed=False)
   weights = ndb.PickleProperty(indexed=False)
-  product_sample = ndb.KeyProperty(indexed=False, key='Product',
+  product_sample = ndb.KeyProperty(indexed=True, key='Product',
       repeated=True)
   status = ndb.PickleProperty(indexed=False, default=Status.idle)
 
