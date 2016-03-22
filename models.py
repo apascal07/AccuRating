@@ -1,3 +1,4 @@
+import enum
 from google.appengine.ext import ndb
 
 class Review(ndb.Model):
@@ -18,7 +19,7 @@ class Reviewer(ndb.Model):
   name = ndb.StringProperty(indexed=True)
   rank = ndb.IntegerProperty(indexed=False)
   vote_count = ndb.IntegerProperty(indexed=False)
-  reviews = ndb.KeyProperty(key='Review', repeated=True)
+  reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
   creation_date = ndb.DateTimeProperty(indexed=False)
   average_rating = ndb.FloatProperty(indexed=False)
   standard_deviation = ndb.FloatProperty(indexed=False)
@@ -30,11 +31,39 @@ class Product(ndb.Model):
   description = ndb.TextProperty(indexed=False)
   reviews = ndb.KeyProperty(key='Review', repeated=True)
   amazon_rating = ndb.FloatProperty(indexed=False)
-  simple_rating = ndb.FloatProperty(indexed=False)
+  average_rating = ndb.FloatProperty(indexed=False)
   weighted_rating = ndb.FloatProperty(indexed=False)
   category = ndb.StringProperty(indexed=False)
   release_date = ndb.DateTimeProperty(indexed=False, auto_now_add=False)
 
+  def set_average(self):
+    """Computes the simple average of all of the reviews."""
+    total = 0.0
+    count = len(reviews)
+    for review_key in reviews:
+      review = review_key.get()
+      total += review.rating
+    average = total / count
+    self.average_rating = average
+
+  def get_average(self):
+    """Computes, if not set, then retrieves the simple average."""
+    if not self.average_rating:
+      set_average()
+    return self.average_rating
+
 class TrainingSet(ndb.Model):
   """A TrainingSet object contains meta data about a training attempt."""
-  pass
+  start_timestamp = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
+  end_timestamp = ndb.DateTimeProperty(indexed=False)
+  weights = ndb.PickleProperty(indexed=False)
+  product_sample = ndb.KeyProperty(indexed=False, key='Product',
+      repeated=True)
+  status = ndb.PickleProperty(indexed=False, default=Status.idle)
+
+class Status(enum.Enum):
+  """Enumerates the states that a TrainingSet can be in."""
+  idle = 0
+  running = 1
+  interrupted = 2
+  finished = 3
