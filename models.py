@@ -44,6 +44,8 @@ class Product(ndb.Model):
   """A Product object contains meta data and references to its reviews."""
   # data retrieved from scraping the Amazon pages
   title = ndb.StringProperty(indexed=True, required=True)
+  product_url = ndb.StringProperty(indexed=True, required=True)
+  reviews_url = ndb.StringProperty(indexed=False, required=True)
   description = ndb.TextProperty(indexed=False)
   reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
   release_date = ndb.DateTimeProperty(indexed=False, required=True)
