@@ -82,4 +82,3 @@ class TrainingSet(ndb.Model):
   weights = ndb.PickleProperty(indexed=False)
   product_sample = ndb.KeyProperty(indexed=True, kind='Product',
                                    repeated=True)
-  status = ndb.PickleProperty(indexed=False, default=Status.idle)
