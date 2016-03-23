@@ -9,7 +9,7 @@ class Product(ndb.Model):
   product_url = ndb.StringProperty(indexed=True, required=True)
   reviews_url = ndb.StringProperty(indexed=False, required=True)
   description = ndb.TextProperty(indexed=False)
-  reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
+  reviews = ndb.KeyProperty(indexed=False, kind='Review', repeated=True)
   release_date = ndb.DateTimeProperty(indexed=False, required=True)
   retrieval_date = ndb.DateTimeProperty(indexed=False, required=True,
                                         auto_now_add=True)
@@ -28,15 +28,15 @@ class Review(ndb.Model):
   # data retrieved from scraping the Amazon pages
   rating = ndb.FloatProperty(indexed=False, required=True)
   text = ndb.TextProperty(indexed=False, required=True)
-  reviewer = ndb.KeyProperty(indexed=False, key='Reviewer', required=True)
+  reviewer = ndb.KeyProperty(indexed=False, kind='Reviewer', required=True)
   reviewer_url = ndb.StringProperty(indexed=False, required=True)
-  good_vote_count = ndb.IntegerProperty(indexed=False, required=True)
-  total_vote_count = ndb.IntegerProperty(indexed=False, required=True)
+  upvote_count = ndb.IntegerProperty(indexed=False, required=True)
+  downvote_count = ndb.IntegerProperty(indexed=False, required=True)
   verified = ndb.BooleanProperty(indexed=False, required=True)
   timestamp = ndb.DateTimeProperty(indexed=False, required=True)
   # data computed by the system
   text_quality = ndb.FloatProperty(indexed=False)
-  weight = ndb.FloatProperty(indexed=False)
+  weight = ndb.FloatProperty(indexed=True)
 
 
 class Reviewer(ndb.Model):
@@ -61,5 +61,4 @@ class TrainingSet(ndb.Model):
   criteria = ndb.PickleProperty(indexed=False)
   review_count_limit = ndb.IntegerProperty(indexed=False)
   weights = ndb.PickleProperty(indexed=False)
-  product_sample = ndb.KeyProperty(indexed=True, key='Product',
-                                   repeated=True)
+  product_sample = ndb.KeyProperty(indexed=True, kind='Product', repeated=True)
