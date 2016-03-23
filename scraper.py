@@ -9,7 +9,12 @@ def get_page_count(html):
 
 
 @engine.timer
-def get_reviews(html):
+def get_review_urls(html):
+  pass
+
+
+@engine.timer
+def get_review(html):
   pass
 
 
