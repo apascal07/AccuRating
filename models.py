@@ -1,13 +1,25 @@
-import enum
 from google.appengine.ext import ndb
 
 
-class Status(enum.Enum):
-  """Enumerates the states that a TrainingSet can be in."""
-  idle = 0
-  running = 1
-  interrupted = 2
-  finished = 3
+class Product(ndb.Model):
+  """A Product object contains meta data and references to its reviews."""
+  # id = ASIN of the product (e.g. B00I5FWWS0)
+  # data retrieved from scraping the Amazon pages
+  title = ndb.StringProperty(indexed=True, required=True)
+  product_url = ndb.StringProperty(indexed=True, required=True)
+  reviews_url = ndb.StringProperty(indexed=False, required=True)
+  description = ndb.TextProperty(indexed=False)
+  reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
+  release_date = ndb.DateTimeProperty(indexed=False, required=True)
+  retrieval_date = ndb.DateTimeProperty(indexed=False, required=True,
+                                        auto_now_add=True)
+  category = ndb.StringProperty(indexed=False, required=True)
+  rating_distribution = ndb.PickleProperty(indexed=False, required=True)
+  amazon_rating = ndb.FloatProperty(indexed=False, required=True)
+  # data computed by the system
+  average_rating = ndb.FloatProperty(indexed=False)
+  weighted_rating = ndb.FloatProperty(indexed=False)
+  standard_deviation = ndb.FloatProperty(indexed=False)
 
 
 class Review(ndb.Model):
@@ -18,7 +30,6 @@ class Review(ndb.Model):
   text = ndb.TextProperty(indexed=False, required=True)
   reviewer = ndb.KeyProperty(indexed=False, key='Reviewer', required=True)
   reviewer_url = ndb.StringProperty(indexed=False, required=True)
-  product = ndb.KeyProperty(indexed=False, key='Product', required=True)
   good_vote_count = ndb.IntegerProperty(indexed=False, required=True)
   total_vote_count = ndb.IntegerProperty(indexed=False, required=True)
   verified = ndb.BooleanProperty(indexed=False, required=True)
@@ -43,27 +54,6 @@ class Reviewer(ndb.Model):
   weight = ndb.FloatProperty(indexed=False)
 
 
-class Product(ndb.Model):
-  """A Product object contains meta data and references to its reviews."""
-  # id = ASIN of the product (e.g. B00I5FWWS0)
-  # data retrieved from scraping the Amazon pages
-  title = ndb.StringProperty(indexed=True, required=True)
-  product_url = ndb.StringProperty(indexed=True, required=True)
-  reviews_url = ndb.StringProperty(indexed=False, required=True)
-  description = ndb.TextProperty(indexed=False)
-  reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
-  release_date = ndb.DateTimeProperty(indexed=False, required=True)
-  retrieval_date = ndb.DateTimeProperty(indexed=False, required=True,
-                                        auto_now_add=True)
-  category = ndb.StringProperty(indexed=False, required=True)
-  rating_distribution = ndb.PickleProperty(indexed=False, required=True)
-  amazon_rating = ndb.FloatProperty(indexed=False, required=True)
-  # data computed by the system
-  average_rating = ndb.FloatProperty(indexed=False)
-  weighted_rating = ndb.FloatProperty(indexed=False)
-  standard_deviation = ndb.FloatProperty(indexed=False)
-
-
 class TrainingSet(ndb.Model):
   """A TrainingSet object contains meta data about a training attempt."""
   start_timestamp = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
@@ -73,4 +63,3 @@ class TrainingSet(ndb.Model):
   weights = ndb.PickleProperty(indexed=False)
   product_sample = ndb.KeyProperty(indexed=True, key='Product',
                                    repeated=True)
-  status = ndb.PickleProperty(indexed=False, default=Status.idle)
