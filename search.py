@@ -1,9 +1,6 @@
 import engine
-import fetcher
 import logging
 import models
-import scraper
-from google.appengine.ext import ndb
 
 
 def get_product(asin):
