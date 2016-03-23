@@ -1,14 +1,4 @@
-import enum
 from google.appengine.ext import ndb
-
-
-class Status(enum.Enum):
-  """Enumerates the states that a TrainingSet can be in."""
-  idle = 0
-  running = 1
-  interrupted = 2
-  finished = 3
-
 
 class Review(ndb.Model):
   """A Review object contains a single review for a single product."""
@@ -16,9 +6,9 @@ class Review(ndb.Model):
   # data retrieved from scraping the Amazon pages
   rating = ndb.FloatProperty(indexed=False, required=True)
   text = ndb.TextProperty(indexed=False, required=True)
-  reviewer = ndb.KeyProperty(indexed=False, key='Reviewer', required=True)
+  reviewer = ndb.KeyProperty(indexed=False, kind='Reviewer', required=True)
   reviewer_url = ndb.StringProperty(indexed=False, required=True)
-  product = ndb.KeyProperty(indexed=False, key='Product', required=True)
+  product = ndb.KeyProperty(indexed=False, kind='Product', required=True)
   good_vote_count = ndb.IntegerProperty(indexed=False, required=True)
   total_vote_count = ndb.IntegerProperty(indexed=False, required=True)
   verified = ndb.BooleanProperty(indexed=False, required=True)
@@ -51,7 +41,7 @@ class Product(ndb.Model):
   product_url = ndb.StringProperty(indexed=True, required=True)
   reviews_url = ndb.StringProperty(indexed=False, required=True)
   description = ndb.TextProperty(indexed=False)
-  reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
+  reviews = ndb.KeyProperty(indexed=False, kind='Review', repeated=True)
   release_date = ndb.DateTimeProperty(indexed=False, required=True)
   retrieval_date = ndb.DateTimeProperty(indexed=False, required=True,
                                         auto_now_add=True)
@@ -71,6 +61,6 @@ class TrainingSet(ndb.Model):
   criteria = ndb.PickleProperty(indexed=False)
   review_count_limit = ndb.IntegerProperty(indexed=False)
   weights = ndb.PickleProperty(indexed=False)
-  product_sample = ndb.KeyProperty(indexed=True, key='Product',
+  product_sample = ndb.KeyProperty(indexed=True, kind='Product',
                                    repeated=True)
   status = ndb.PickleProperty(indexed=False, default=Status.idle)

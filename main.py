@@ -15,12 +15,22 @@
 # limitations under the License.
 #
 import webapp2
-
+import logging
+from scraper import get_product
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
+        logging.info('hello world!')
         self.response.write('Hello world!')
 
+class ScraperHandler(webapp2.RequestHandler):
+    def get(self):
+        logging.info('hello world!')
+        open('product.xml').readall()
+        self.response.write()
+
+
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/', MainHandler),
+    ('/scraper', ScraperHandler)
 ], debug=True)

@@ -1,0 +1,511 @@
+<?xml version="1.0" ?>
+<ItemLookupResponse
+    xmlns="http://webservices.amazon.com/AWSECommerceService/2011-08-01">
+    <OperationRequest>
+        <HTTPHeaders>
+            <Header Name="UserAgent" Value="Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"></Header>
+        </HTTPHeaders>
+        <RequestId>703f1ee7-5680-4fb9-9ebf-18b01ec4a8c2</RequestId>
+        <Arguments>
+            <Argument Name="AWSAccessKeyId" Value="AKIAJD2KB2W4IWE7T6CQ"></Argument>
+            <Argument Name="AssociateTag" Value="alepas-20"></Argument>
+            <Argument Name="IdType" Value="ASIN"></Argument>
+            <Argument Name="ItemId" Value="B001E5ZWT4"></Argument>
+            <Argument Name="Operation" Value="ItemLookup"></Argument>
+            <Argument Name="ResponseGroup" Value="Accessories,AlternateVersions,BrowseNodes,EditorialReview,Images,ItemAttributes,ItemIds,Large,Medium,OfferFull,OfferListings,Offers,OfferSummary,PromotionSummary,RelatedItems,Reviews,SalesRank,Similarities,Small,Tracks,Variations,VariationImages,VariationMatrix,VariationOffers,VariationSummary"></Argument>
+            <Argument Name="Service" Value="AWSECommerceService"></Argument>
+            <Argument Name="Timestamp" Value="2016-03-23T18:21:13.000Z"></Argument>
+            <Argument Name="Signature" Value="zdOQD1J+mu7wBQb6lgxVRENZlxi9li6xUcTNvfxqM/I="></Argument>
+        </Arguments>
+        <RequestProcessingTime>0.0352770000000000</RequestProcessingTime>
+    </OperationRequest>
+    <Items>
+        <Request>
+            <IsValid>True</IsValid>
+            <ItemLookupRequest>
+                <IdType>ASIN</IdType>
+                <ItemId>B001E5ZWT4</ItemId>
+                <ResponseGroup>Accessories</ResponseGroup>
+                <ResponseGroup>AlternateVersions</ResponseGroup>
+                <ResponseGroup>BrowseNodes</ResponseGroup>
+                <ResponseGroup>EditorialReview</ResponseGroup>
+                <ResponseGroup>Images</ResponseGroup>
+                <ResponseGroup>ItemAttributes</ResponseGroup>
+                <ResponseGroup>ItemIds</ResponseGroup>
+                <ResponseGroup>Large</ResponseGroup>
+                <ResponseGroup>Medium</ResponseGroup>
+                <ResponseGroup>OfferFull</ResponseGroup>
+                <ResponseGroup>OfferListings</ResponseGroup>
+                <ResponseGroup>Offers</ResponseGroup>
+                <ResponseGroup>OfferSummary</ResponseGroup>
+                <ResponseGroup>PromotionSummary</ResponseGroup>
+                <ResponseGroup>RelatedItems</ResponseGroup>
+                <ResponseGroup>Reviews</ResponseGroup>
+                <ResponseGroup>SalesRank</ResponseGroup>
+                <ResponseGroup>Similarities</ResponseGroup>
+                <ResponseGroup>Small</ResponseGroup>
+                <ResponseGroup>Tracks</ResponseGroup>
+                <ResponseGroup>Variations</ResponseGroup>
+                <ResponseGroup>VariationImages</ResponseGroup>
+                <ResponseGroup>VariationMatrix</ResponseGroup>
+                <ResponseGroup>VariationOffers</ResponseGroup>
+                <ResponseGroup>VariationSummary</ResponseGroup>
+                <VariationPage>All</VariationPage>
+            </ItemLookupRequest>
+            <Errors>
+                <Error>
+                    <Code>AWS.MissingParameterValueCombination</Code>
+                    <Message>Your request is missing a required parameter combination.  When ResponseGroup equals RelatedItems, RelationshipType must be present.</Message>
+                </Error>
+            </Errors>
+        </Request>
+        <Item>
+            <ASIN>B001E5ZWT4</ASIN>
+            <ParentASIN>B00M36M3KY</ParentASIN>
+            <DetailPageURL>http://www.amazon.com/Gorilla-6100101-Tape-To-Go/dp/B001E5ZWT4%3Fpsc%3D1%26SubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB001E5ZWT4</DetailPageURL>
+            <ItemLinks>
+                <ItemLink>
+                    <Description>Technical Details</Description>
+                    <URL>http://www.amazon.com/Gorilla-6100101-Tape-To-Go/dp/tech-data/B001E5ZWT4%3FSubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D386001%26creativeASIN%3DB001E5ZWT4</URL>
+                </ItemLink>
+                <ItemLink>
+                    <Description>Add To Baby Registry</Description>
+                    <URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3DB001E5ZWT4%26SubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D386001%26creativeASIN%3DB001E5ZWT4</URL>
+                </ItemLink>
+                <ItemLink>
+                    <Description>Add To Wedding Registry</Description>
+                    <URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3DB001E5ZWT4%26SubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D386001%26creativeASIN%3DB001E5ZWT4</URL>
+                </ItemLink>
+                <ItemLink>
+                    <Description>Add To Wishlist</Description>
+                    <URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3DB001E5ZWT4%26SubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D386001%26creativeASIN%3DB001E5ZWT4</URL>
+                </ItemLink>
+                <ItemLink>
+                    <Description>Tell A Friend</Description>
+                    <URL>http://www.amazon.com/gp/pdp/taf/B001E5ZWT4%3FSubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D386001%26creativeASIN%3DB001E5ZWT4</URL>
+                </ItemLink>
+                <ItemLink>
+                    <Description>All Customer Reviews</Description>
+                    <URL>http://www.amazon.com/review/product/B001E5ZWT4%3FSubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D386001%26creativeASIN%3DB001E5ZWT4</URL>
+                </ItemLink>
+                <ItemLink>
+                    <Description>All Offers</Description>
+                    <URL>http://www.amazon.com/gp/offer-listing/B001E5ZWT4%3FSubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D386001%26creativeASIN%3DB001E5ZWT4</URL>
+                </ItemLink>
+            </ItemLinks>
+            <SalesRank>26</SalesRank>
+            <SmallImage>
+                <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL75_.jpg</URL>
+                <Height Units="pixels">75</Height>
+                <Width Units="pixels">46</Width>
+            </SmallImage>
+            <MediumImage>
+                <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL160_.jpg</URL>
+                <Height Units="pixels">160</Height>
+                <Width Units="pixels">98</Width>
+            </MediumImage>
+            <LargeImage>
+                <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL.jpg</URL>
+                <Height Units="pixels">500</Height>
+                <Width Units="pixels">305</Width>
+            </LargeImage>
+            <ImageSets>
+                <ImageSet Category="swatch">
+                    <SwatchImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL30_.jpg</URL>
+                        <Height Units="pixels">30</Height>
+                        <Width Units="pixels">18</Width>
+                    </SwatchImage>
+                    <SmallImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL75_.jpg</URL>
+                        <Height Units="pixels">75</Height>
+                        <Width Units="pixels">46</Width>
+                    </SmallImage>
+                    <ThumbnailImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL75_.jpg</URL>
+                        <Height Units="pixels">75</Height>
+                        <Width Units="pixels">46</Width>
+                    </ThumbnailImage>
+                    <TinyImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL110_.jpg</URL>
+                        <Height Units="pixels">110</Height>
+                        <Width Units="pixels">67</Width>
+                    </TinyImage>
+                    <MediumImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL160_.jpg</URL>
+                        <Height Units="pixels">160</Height>
+                        <Width Units="pixels">98</Width>
+                    </MediumImage>
+                    <LargeImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL.jpg</URL>
+                        <Height Units="pixels">500</Height>
+                        <Width Units="pixels">305</Width>
+                    </LargeImage>
+                </ImageSet>
+                <ImageSet Category="variant">
+                    <SwatchImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41uzOc%2BjyjL._SL30_.jpg</URL>
+                        <Height Units="pixels">22</Height>
+                        <Width Units="pixels">30</Width>
+                    </SwatchImage>
+                    <SmallImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41uzOc%2BjyjL._SL75_.jpg</URL>
+                        <Height Units="pixels">56</Height>
+                        <Width Units="pixels">75</Width>
+                    </SmallImage>
+                    <ThumbnailImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41uzOc%2BjyjL._SL75_.jpg</URL>
+                        <Height Units="pixels">56</Height>
+                        <Width Units="pixels">75</Width>
+                    </ThumbnailImage>
+                    <TinyImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41uzOc%2BjyjL._SL110_.jpg</URL>
+                        <Height Units="pixels">82</Height>
+                        <Width Units="pixels">110</Width>
+                    </TinyImage>
+                    <MediumImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41uzOc%2BjyjL._SL160_.jpg</URL>
+                        <Height Units="pixels">120</Height>
+                        <Width Units="pixels">160</Width>
+                    </MediumImage>
+                    <LargeImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41uzOc%2BjyjL.jpg</URL>
+                        <Height Units="pixels">375</Height>
+                        <Width Units="pixels">500</Width>
+                    </LargeImage>
+                </ImageSet>
+                <ImageSet Category="variant">
+                    <SwatchImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41tgfi1igPL._SL30_.jpg</URL>
+                        <Height Units="pixels">22</Height>
+                        <Width Units="pixels">30</Width>
+                    </SwatchImage>
+                    <SmallImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41tgfi1igPL._SL75_.jpg</URL>
+                        <Height Units="pixels">56</Height>
+                        <Width Units="pixels">75</Width>
+                    </SmallImage>
+                    <ThumbnailImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41tgfi1igPL._SL75_.jpg</URL>
+                        <Height Units="pixels">56</Height>
+                        <Width Units="pixels">75</Width>
+                    </ThumbnailImage>
+                    <TinyImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41tgfi1igPL._SL110_.jpg</URL>
+                        <Height Units="pixels">82</Height>
+                        <Width Units="pixels">110</Width>
+                    </TinyImage>
+                    <MediumImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41tgfi1igPL._SL160_.jpg</URL>
+                        <Height Units="pixels">120</Height>
+                        <Width Units="pixels">160</Width>
+                    </MediumImage>
+                    <LargeImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41tgfi1igPL.jpg</URL>
+                        <Height Units="pixels">375</Height>
+                        <Width Units="pixels">500</Width>
+                    </LargeImage>
+                </ImageSet>
+                <ImageSet Category="variant">
+                    <SwatchImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41fViCGtxZL._SL30_.jpg</URL>
+                        <Height Units="pixels">22</Height>
+                        <Width Units="pixels">30</Width>
+                    </SwatchImage>
+                    <SmallImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41fViCGtxZL._SL75_.jpg</URL>
+                        <Height Units="pixels">56</Height>
+                        <Width Units="pixels">75</Width>
+                    </SmallImage>
+                    <ThumbnailImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41fViCGtxZL._SL75_.jpg</URL>
+                        <Height Units="pixels">56</Height>
+                        <Width Units="pixels">75</Width>
+                    </ThumbnailImage>
+                    <TinyImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41fViCGtxZL._SL110_.jpg</URL>
+                        <Height Units="pixels">82</Height>
+                        <Width Units="pixels">110</Width>
+                    </TinyImage>
+                    <MediumImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41fViCGtxZL._SL160_.jpg</URL>
+                        <Height Units="pixels">120</Height>
+                        <Width Units="pixels">160</Width>
+                    </MediumImage>
+                    <LargeImage>
+                        <URL>http://ecx.images-amazon.com/images/I/41fViCGtxZL.jpg</URL>
+                        <Height Units="pixels">375</Height>
+                        <Width Units="pixels">500</Width>
+                    </LargeImage>
+                </ImageSet>
+                <ImageSet Category="variant">
+                    <SwatchImage>
+                        <URL>http://ecx.images-amazon.com/images/I/4130ANoJ6%2BL._SL30_.jpg</URL>
+                        <Height Units="pixels">22</Height>
+                        <Width Units="pixels">30</Width>
+                    </SwatchImage>
+                    <SmallImage>
+                        <URL>http://ecx.images-amazon.com/images/I/4130ANoJ6%2BL._SL75_.jpg</URL>
+                        <Height Units="pixels">56</Height>
+                        <Width Units="pixels">75</Width>
+                    </SmallImage>
+                    <ThumbnailImage>
+                        <URL>http://ecx.images-amazon.com/images/I/4130ANoJ6%2BL._SL75_.jpg</URL>
+                        <Height Units="pixels">56</Height>
+                        <Width Units="pixels">75</Width>
+                    </ThumbnailImage>
+                    <TinyImage>
+                        <URL>http://ecx.images-amazon.com/images/I/4130ANoJ6%2BL._SL110_.jpg</URL>
+                        <Height Units="pixels">82</Height>
+                        <Width Units="pixels">110</Width>
+                    </TinyImage>
+                    <MediumImage>
+                        <URL>http://ecx.images-amazon.com/images/I/4130ANoJ6%2BL._SL160_.jpg</URL>
+                        <Height Units="pixels">120</Height>
+                        <Width Units="pixels">160</Width>
+                    </MediumImage>
+                    <LargeImage>
+                        <URL>http://ecx.images-amazon.com/images/I/4130ANoJ6%2BL.jpg</URL>
+                        <Height Units="pixels">375</Height>
+                        <Width Units="pixels">500</Width>
+                    </LargeImage>
+                </ImageSet>
+                <ImageSet Category="variant">
+                    <SwatchImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51jL7cfxBnL._SL30_.jpg</URL>
+                        <Height Units="pixels">30</Height>
+                        <Width Units="pixels">30</Width>
+                    </SwatchImage>
+                    <SmallImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51jL7cfxBnL._SL75_.jpg</URL>
+                        <Height Units="pixels">75</Height>
+                        <Width Units="pixels">75</Width>
+                    </SmallImage>
+                    <ThumbnailImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51jL7cfxBnL._SL75_.jpg</URL>
+                        <Height Units="pixels">75</Height>
+                        <Width Units="pixels">75</Width>
+                    </ThumbnailImage>
+                    <TinyImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51jL7cfxBnL._SL110_.jpg</URL>
+                        <Height Units="pixels">110</Height>
+                        <Width Units="pixels">110</Width>
+                    </TinyImage>
+                    <MediumImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51jL7cfxBnL._SL160_.jpg</URL>
+                        <Height Units="pixels">160</Height>
+                        <Width Units="pixels">160</Width>
+                    </MediumImage>
+                    <LargeImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51jL7cfxBnL.jpg</URL>
+                        <Height Units="pixels">500</Height>
+                        <Width Units="pixels">500</Width>
+                    </LargeImage>
+                </ImageSet>
+                <ImageSet Category="primary">
+                    <SwatchImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL30_.jpg</URL>
+                        <Height Units="pixels">30</Height>
+                        <Width Units="pixels">18</Width>
+                    </SwatchImage>
+                    <SmallImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL75_.jpg</URL>
+                        <Height Units="pixels">75</Height>
+                        <Width Units="pixels">46</Width>
+                    </SmallImage>
+                    <ThumbnailImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL75_.jpg</URL>
+                        <Height Units="pixels">75</Height>
+                        <Width Units="pixels">46</Width>
+                    </ThumbnailImage>
+                    <TinyImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL110_.jpg</URL>
+                        <Height Units="pixels">110</Height>
+                        <Width Units="pixels">67</Width>
+                    </TinyImage>
+                    <MediumImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL._SL160_.jpg</URL>
+                        <Height Units="pixels">160</Height>
+                        <Width Units="pixels">98</Width>
+                    </MediumImage>
+                    <LargeImage>
+                        <URL>http://ecx.images-amazon.com/images/I/51gLhOZAxIL.jpg</URL>
+                        <Height Units="pixels">500</Height>
+                        <Width Units="pixels">305</Width>
+                    </LargeImage>
+                </ImageSet>
+            </ImageSets>
+            <ItemAttributes>
+                <Binding>Tools & Home Improvement</Binding>
+                <Brand>Gorilla</Brand>
+                <CatalogNumberList>
+                    <CatalogNumberListElement>6100101</CatalogNumberListElement>
+                    <CatalogNumberListElement>GOR6100105</CatalogNumberListElement>
+                </CatalogNumberList>
+                <Color>Black</Color>
+                <EAN>7785004569977</EAN>
+                <EANList>
+                    <EANListElement>7785004569977</EANListElement>
+                    <EANListElement>5509005514833</EANListElement>
+                    <EANListElement>0052427610010</EANListElement>
+                    <EANListElement>5704947001704</EANListElement>
+                </EANList>
+                <Feature>Double-Thick Adhesive: Grips smooth, rough and uneven surfaces</Feature>
+                <Feature>Tough, Reinforced Backing: The tight weave contributes to the heft, but Gorilla Tape can still be ripped by hand.</Feature>
+                <Feature>Rugged, Weather-Resistant Shell: Withstands moisture, UV rays and temperature extremes better than other tapes</Feature>
+                <IsAutographed>0</IsAutographed>
+                <IsMemorabilia>0</IsMemorabilia>
+                <ItemDimensions>
+                    <Height Units="hundredths-inches">567</Height>
+                    <Length Units="hundredths-inches">91</Length>
+                    <Weight Units="hundredths-pounds">25</Weight>
+                    <Width Units="hundredths-inches">331</Width>
+                </ItemDimensions>
+                <Label>Gorilla</Label>
+                <ListPrice>
+                    <Amount>499</Amount>
+                    <CurrencyCode>USD</CurrencyCode>
+                    <FormattedPrice>$4.99</FormattedPrice>
+                </ListPrice>
+                <Manufacturer>Gorilla</Manufacturer>
+                <Model>6100101</Model>
+                <MPN>3044401</MPN>
+                <NumberOfItems>1</NumberOfItems>
+                <PackageDimensions>
+                    <Height Units="hundredths-inches">125</Height>
+                    <Length Units="hundredths-inches">575</Length>
+                    <Weight Units="hundredths-pounds">25</Weight>
+                    <Width Units="hundredths-inches">325</Width>
+                </PackageDimensions>
+                <PackageQuantity>1</PackageQuantity>
+                <PartNumber>3044401</PartNumber>
+                <ProductGroup>Home Improvement</ProductGroup>
+                <ProductTypeName>BUILDING_MATERIAL</ProductTypeName>
+                <Publisher>Gorilla</Publisher>
+                <Size>1-Inch by 30 feet</Size>
+                <SKU>ISN4735</SKU>
+                <Studio>Gorilla</Studio>
+                <Title>Gorilla Tape To-Go</Title>
+                <UPC>052427610010</UPC>
+                <UPCList>
+                    <UPCListElement>052427610010</UPCListElement>
+                </UPCList>
+            </ItemAttributes>
+            <OfferSummary>
+                <LowestNewPrice>
+                    <Amount>200</Amount>
+                    <CurrencyCode>USD</CurrencyCode>
+                    <FormattedPrice>$2.00</FormattedPrice>
+                </LowestNewPrice>
+                <LowestUsedPrice>
+                    <Amount>425</Amount>
+                    <CurrencyCode>USD</CurrencyCode>
+                    <FormattedPrice>$4.25</FormattedPrice>
+                </LowestUsedPrice>
+                <TotalNew>25</TotalNew>
+                <TotalUsed>1</TotalUsed>
+                <TotalCollectible>0</TotalCollectible>
+                <TotalRefurbished>0</TotalRefurbished>
+            </OfferSummary>
+            <Offers>
+                <TotalOffers>1</TotalOffers>
+                <TotalOfferPages>1</TotalOfferPages>
+                <MoreOffersUrl>http://www.amazon.com/gp/offer-listing/B001E5ZWT4%3FSubscriptionId%3DAKIAJD2KB2W4IWE7T6CQ%26tag%3Dalepas-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D386001%26creativeASIN%3DB001E5ZWT4</MoreOffersUrl>
+                <Offer>
+                    <Merchant>
+                        <Name>Amazon.com</Name>
+                    </Merchant>
+                    <OfferAttributes>
+                        <Condition>New</Condition>
+                    </OfferAttributes>
+                    <OfferListing>
+                        <OfferListingId>uRaNeorrTbj%2Fu7Wh02C1Tz0fPKPYyLQxpcEX7SCli98UOpHq2HTOW%2FzuUDFLM5jxQi%2F1qcgmOvNknLfYXpOoT0uQW30LpyGPXSJZ10ASDRhKhFgWKGpV0g%3D%3D</OfferListingId>
+                        <Price>
+                            <Amount>297</Amount>
+                            <CurrencyCode>USD</CurrencyCode>
+                            <FormattedPrice>$2.97</FormattedPrice>
+                        </Price>
+                        <AmountSaved>
+                            <Amount>202</Amount>
+                            <CurrencyCode>USD</CurrencyCode>
+                            <FormattedPrice>$2.02</FormattedPrice>
+                        </AmountSaved>
+                        <PercentageSaved>40</PercentageSaved>
+                        <Availability>Usually ships in 24 hours</Availability>
+                        <AvailabilityAttributes>
+                            <AvailabilityType>now</AvailabilityType>
+                            <MinimumHours>0</MinimumHours>
+                            <MaximumHours>0</MaximumHours>
+                        </AvailabilityAttributes>
+                        <IsEligibleForSuperSaverShipping>1</IsEligibleForSuperSaverShipping>
+                        <IsEligibleForPrime>0</IsEligibleForPrime>
+                    </OfferListing>
+                </Offer>
+            </Offers>
+            <CustomerReviews>
+                <IFrameURL>http://www.amazon.com/reviews/iframe?akid=AKIAJD2KB2W4IWE7T6CQ&alinkCode=xm2&asin=B001E5ZWT4&atag=alepas-20&exp=2016-03-24T18%3A21%3A15Z&v=2&sig=k3uMF800QxY61oRJViJyMsEWLceW3%2BHuGz5Kp6VzhI0%3D</IFrameURL>
+                <HasReviews>true</HasReviews>
+            </CustomerReviews>
+            <EditorialReviews>
+                <EditorialReview>
+                    <Source>Product Description</Source>
+                    <Content>Convenient for on-the-go repairs, Gorilla Tape To-Go's 1 inch width packs a powerful grip in a portable size. With double-thick adhesive, tough reinforced backing and rugged weather-resistant shell, it sticks to rough and uneven surfaces, including wood, stone, stucco and brick, that ordinary tapes can't hold.  This size is ideal size for backpacks, toolboxes, glove compartments for camping, boating and more!</Content>
+                    <IsLinkSuppressed>0</IsLinkSuppressed>
+                </EditorialReview>
+            </EditorialReviews>
+            <SimilarProducts>
+                <SimilarProduct>
+                    <ASIN>B000CSS8UE</ASIN>
+                    <Title>Black Gorilla Tape 1.88 In. x 35 Yd., One Roll</Title>
+                </SimilarProduct>
+                <SimilarProduct>
+                    <ASIN>B00EUGCT22</ASIN>
+                    <Title>Gorilla Clear Repair</Title>
+                </SimilarProduct>
+                <SimilarProduct>
+                    <ASIN>B0090AAY6Q</ASIN>
+                    <Title>SE EB122OR Emergency Sleeping Bag with Drawstring Carrying Bag, Orange</Title>
+                </SimilarProduct>
+                <SimilarProduct>
+                    <ASIN>B004NBZLJ2</ASIN>
+                    <Title>Cyalume SnapLight Industrial Grade Light Sticks, Green, 6" Long, 12 Hour Duration (Pack of 10)</Title>
+                </SimilarProduct>
+                <SimilarProduct>
+                    <ASIN>B000GCRWCG</ASIN>
+                    <Title>Emergency Mylar Thermal Blankets (Pack of 10)</Title>
+                </SimilarProduct>
+            </SimilarProducts>
+            <BrowseNodes>
+                <BrowseNode>
+                    <BrowseNodeId>256160011</BrowseNodeId>
+                    <Name>Duct Tape</Name>
+                    <Ancestors>
+                        <BrowseNode>
+                            <BrowseNodeId>256159011</BrowseNodeId>
+                            <Name>Adhesive Tapes</Name>
+                            <Ancestors>
+                                <BrowseNode>
+                                    <BrowseNodeId>256225011</BrowseNodeId>
+                                    <Name>Tapes, Adhesives & Sealants</Name>
+                                    <Ancestors>
+                                        <BrowseNode>
+                                            <BrowseNodeId>16310161</BrowseNodeId>
+                                            <Name>Categories</Name>
+                                            <IsCategoryRoot>1</IsCategoryRoot>
+                                            <Ancestors>
+                                                <BrowseNode>
+                                                    <BrowseNodeId>16310091</BrowseNodeId>
+                                                    <Name>Industrial & Scientific</Name>
+                                                </BrowseNode>
+                                            </Ancestors>
+                                        </BrowseNode>
+                                    </Ancestors>
+                                </BrowseNode>
+                            </Ancestors>
+                        </BrowseNode>
+                    </Ancestors>
+                </BrowseNode>
+            </BrowseNodes>
+        </Item>
+    </Items>
+</ItemLookupResponse>
