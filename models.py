@@ -12,10 +12,12 @@ class Status(enum.Enum):
 
 class Review(ndb.Model):
   """A Review object contains a single review for a single product."""
+  # id = UID of the review (e.g. R3QE9AHU2XW8IQ)
   # data retrieved from scraping the Amazon pages
   rating = ndb.FloatProperty(indexed=False, required=True)
   text = ndb.TextProperty(indexed=False, required=True)
   reviewer = ndb.KeyProperty(indexed=False, key='Reviewer', required=True)
+  reviewer_url = ndb.StringProperty(indexed=False, required=True)
   product = ndb.KeyProperty(indexed=False, key='Product', required=True)
   good_vote_count = ndb.IntegerProperty(indexed=False, required=True)
   total_vote_count = ndb.IntegerProperty(indexed=False, required=True)
@@ -28,13 +30,14 @@ class Review(ndb.Model):
 
 class Reviewer(ndb.Model):
   """A Reviewer object contains all of the data associated with a reviewer."""
+  # id = UID of the reviewer (e.g. A17HFMUBV1AOGJ)
   # data retrieved from scraping the Amazon pages
   name = ndb.StringProperty(indexed=True, required=True)
   rank = ndb.IntegerProperty(indexed=False, required=True)
   vote_count = ndb.IntegerProperty(indexed=False, required=True)
-  reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
+  rating_distribution = ndb.PickleProperty(indexed=False, required=True)
+  creation_date = ndb.DateTimeProperty(indexed=False, required=True)
   # data computed by the system
-  creation_date = ndb.DateTimeProperty(indexed=False)
   average_rating = ndb.FloatProperty(indexed=False)
   standard_deviation = ndb.FloatProperty(indexed=False)
   weight = ndb.FloatProperty(indexed=False)
@@ -42,6 +45,7 @@ class Reviewer(ndb.Model):
 
 class Product(ndb.Model):
   """A Product object contains meta data and references to its reviews."""
+  # id = ASIN of the product (e.g. B00I5FWWS0)
   # data retrieved from scraping the Amazon pages
   title = ndb.StringProperty(indexed=True, required=True)
   product_url = ndb.StringProperty(indexed=True, required=True)
@@ -49,12 +53,15 @@ class Product(ndb.Model):
   description = ndb.TextProperty(indexed=False)
   reviews = ndb.KeyProperty(indexed=False, key='Review', repeated=True)
   release_date = ndb.DateTimeProperty(indexed=False, required=True)
+  retrieval_date = ndb.DateTimeProperty(indexed=False, required=True,
+                                        auto_now_add=True)
   category = ndb.StringProperty(indexed=False, required=True)
   rating_distribution = ndb.PickleProperty(indexed=False, required=True)
   amazon_rating = ndb.FloatProperty(indexed=False, required=True)
   # data computed by the system
   average_rating = ndb.FloatProperty(indexed=False)
   weighted_rating = ndb.FloatProperty(indexed=False)
+  standard_deviation = ndb.FloatProperty(indexed=False)
 
 
 class TrainingSet(ndb.Model):
