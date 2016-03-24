@@ -2,4 +2,4 @@
 
 
 def get_value(text):
-  pass
+  return 0
