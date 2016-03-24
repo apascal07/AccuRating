@@ -16,7 +16,8 @@
 #
 import webapp2
 import logging
-from scraper import get_product
+import scraper
+import os
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
@@ -25,9 +26,8 @@ class MainHandler(webapp2.RequestHandler):
 
 class ScraperHandler(webapp2.RequestHandler):
     def get(self):
-        logging.info('hello world!')
-        open('product.xml').readall()
-        self.response.write()
+        html = open('./test_files/product.xml').read()
+        self.response.write(scraper.get_product(html))
 
 
 app = webapp2.WSGIApplication([
