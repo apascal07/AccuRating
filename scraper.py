@@ -1,31 +1,25 @@
 """Scraper extracts data from raw HTML and creates corresponding objects."""
 import models
-from bs4 import BeautifulSoup
-import engine
+import bs4
 
-
-@engine.timer
 def get_page_count(html):
   pass
 
 
-@engine.timer
 def get_review_urls(html):
   pass
 
 
-@engine.timer
 def get_review(html):
   pass
 
 
-@engine.timer
 def get_profile(html):
   pass
 
 
-@engine.timer
 def get_product(html):
-  soup = BeautifulSoup(html, "html.parser")
-  product_xml = soup.itemlookupresponse.items.item
-  print product_xml.title.text
+  product = models.Product()
+  soup = bs4.BeautifulSoup(html, "html.parser")
+  xml = soup.itemlookupresponse.items.item
+  return product
