@@ -12,6 +12,10 @@ handlers:
 - url: .*
   script: main.app
 
+- url: /test_files
+  static_dir: test_files
+  application_readable: true
+
 libraries:
 - name: webapp2
   version: "2.5.2"
