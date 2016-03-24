@@ -17,7 +17,7 @@
 import webapp2
 import logging
 import scraper
-import os
+import pprint
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
@@ -27,8 +27,8 @@ class MainHandler(webapp2.RequestHandler):
 class ScraperHandler(webapp2.RequestHandler):
     def get(self):
         html = open('./test_files/product.xml').read()
-        self.response.write(scraper.get_product(html))
-
+        pp = pprint.PrettyPrinter(indent=4)
+        self.response.write(pp.pformat(scraper.get_product(html)))
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
