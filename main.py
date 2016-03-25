@@ -31,10 +31,15 @@ class ScraperHandler(webapp2.RequestHandler):
         product = open('./test_files/product.xml').read()
         self.response.write(pp.pformat(scraper.get_product(product)))
 
-        self.response.write('<br />')
+        self.response.write('<br /><br />')
 
         review = open('./test_files/review.html').read()
         self.response.write(pp.pformat(scraper.get_review(review)))
+
+        self.response.write('<br /><br />')
+
+        profile = open('./test_files/profile.html').read()
+        self.response.write(pp.pformat(scraper.get_profile(profile)))
 
 
 app = webapp2.WSGIApplication([
