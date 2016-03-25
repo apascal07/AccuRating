@@ -26,9 +26,16 @@ class MainHandler(webapp2.RequestHandler):
 
 class ScraperHandler(webapp2.RequestHandler):
     def get(self):
-        html = open('./test_files/product.xml').read()
         pp = pprint.PrettyPrinter(indent=4)
-        self.response.write(pp.pformat(scraper.get_product(html)))
+
+        product = open('./test_files/product.xml').read()
+        self.response.write(pp.pformat(scraper.get_product(product)))
+
+        self.response.write('<br />')
+
+        review = open('./test_files/review.html').read()
+        self.response.write(pp.pformat(scraper.get_review(review)))
+
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
