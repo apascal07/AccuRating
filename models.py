@@ -10,16 +10,13 @@ class Product(ndb.Model):
   reviews_url = ndb.StringProperty(indexed=False, required=True)
   description = ndb.TextProperty(indexed=False)
   reviews = ndb.KeyProperty(indexed=False, kind='Review', repeated=True)
-  release_date = ndb.DateTimeProperty(indexed=False, required=True)
   retrieval_date = ndb.DateTimeProperty(indexed=False, required=True,
                                         auto_now_add=True)
   category = ndb.StringProperty(indexed=False, required=True)
-  rating_distribution = ndb.PickleProperty(indexed=False, required=True)
-  amazon_rating = ndb.FloatProperty(indexed=False, required=True)
+  amazon_rating = ndb.FloatProperty(indexed=False)
   # data computed by the system
   average_rating = ndb.FloatProperty(indexed=False)
   weighted_rating = ndb.FloatProperty(indexed=False)
-  standard_deviation = ndb.FloatProperty(indexed=False)
 
 
 class Review(ndb.Model):
@@ -28,13 +25,14 @@ class Review(ndb.Model):
   # data retrieved from scraping the Amazon pages
   rating = ndb.FloatProperty(indexed=False, required=True)
   text = ndb.TextProperty(indexed=False, required=True)
-  reviewer = ndb.KeyProperty(indexed=False, kind='Reviewer', required=True)
+  reviewer = ndb.KeyProperty(indexed=False, kind='Reviewer')
   reviewer_url = ndb.StringProperty(indexed=False, required=True)
   upvote_count = ndb.IntegerProperty(indexed=False, required=True)
   downvote_count = ndb.IntegerProperty(indexed=False, required=True)
   verified = ndb.BooleanProperty(indexed=False, required=True)
   timestamp = ndb.DateTimeProperty(indexed=False, required=True)
   # data computed by the system
+  vote_rank = ndb.FloatProperty(indexed=True)
   text_quality = ndb.FloatProperty(indexed=False)
   weight = ndb.FloatProperty(indexed=True)
 
