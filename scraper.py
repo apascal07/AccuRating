@@ -19,16 +19,25 @@ def _get_date(date_str):
     return None
 
 
+def get_reviews_url(html):
+  dom = bs4.BeautifulSoup(html, 'html.parser')
+  return dom.find(class_='crIframeReviewList').find('span', class_='small').b.a['href']
+
+
 def get_amazon_rating(html):
-  pass
+  dom = bs4.BeautifulSoup(html, 'html.parser')
+  return float(dom.find_all(class_='arp-rating-out-of-text').pop().text[:3])
 
 
 def get_page_count(html):
-  pass
+  dom = bs4.BeautifulSoup(html, 'html.parser')
+  return int(dom.find_all(class_='page-button').pop().text)
 
 
-def get_review_urls(html):
-  pass
+def get_review_url_list(html):
+  dom = bs4.BeautifulSoup(html, 'html.parser')
+  titles = dom.find_all('a', class_='review-title')
+  return ['http://www.amazon.com' + title['href'] for title in titles]
 
 
 def get_review(html):

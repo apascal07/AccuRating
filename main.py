@@ -29,17 +29,32 @@ class ScraperHandler(webapp2.RequestHandler):
         pp = pprint.PrettyPrinter(indent=4)
 
         product = open('./test_files/product.xml').read()
+        self.response.write('<b>Get product: </b><br />')
         self.response.write(pp.pformat(scraper.get_product(product)))
-
         self.response.write('<br /><br />')
 
         review = open('./test_files/review.html').read()
+        self.response.write('<b>Get review: </b><br />')
         self.response.write(pp.pformat(scraper.get_review(review)))
-
         self.response.write('<br /><br />')
 
         profile = open('./test_files/profile.html').read()
+        self.response.write('<b>Get profile: </b><br />')
         self.response.write(pp.pformat(scraper.get_profile(profile)))
+        self.response.write('<br /><br />')
+
+        reviews_iframe = open('./test_files/reviews_iframe.html').read()
+        self.response.write('<b>Get reviews url: </b>')
+        self.response.write(pp.pformat(scraper.get_reviews_url(reviews_iframe)))
+        self.response.write('<br /><br />')
+
+        review_list = open('./test_files/review_list.html').read()
+        self.response.write('<b>Get page count: </b>')
+        self.response.write(pp.pformat(scraper.get_page_count(review_list)))
+        self.response.write('<br /><br /><b>Get amazon rating: </b>')
+        self.response.write(pp.pformat(scraper.get_amazon_rating(review_list)))
+        self.response.write('<br /><br /><b>Get review URL list: </b><br />')
+        self.response.write(pp.pformat(scraper.get_review_url_list(review_list)))
 
 
 app = webapp2.WSGIApplication([
