@@ -1,5 +1,6 @@
 import fetcher
 import logging
+import math
 import parser
 import scraper
 import time
@@ -49,6 +50,29 @@ def create_product(asin):
     product.reviews.append(review.key)
   product.put()
   return product
+
+
+def process_product(product):
+  pass
+
+
+def weigh_product(product, weights=None):
+  pass
+
+
+def get_vote_confidence(upvotes, downvotes):
+  """Calculates the rank that a pair of upvotes/downvotes has."""
+  # source: https://medium.com/hacking-and-gonzo/how-reddit-ranking-algorithms-
+  #     work-ef111e33d0d9#.krp5goqqb
+  n = upvotes + downvotes
+  if n == 0:
+    return 0
+  z = 1.281551565545  # 80% confidence
+  p = float(upvotes) / n
+  l = p + math.pow(z, 2) / (2 * n)
+  r = z * math.sqrt(p * (1 - p) / n + math.pow(z, 2) / (4 * math.pow(n, 2)))
+  d = 1 + math.pow(z, 2) / n
+  return (l - r) / d
 
 
 def timer(fn):
