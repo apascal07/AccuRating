@@ -4,19 +4,23 @@ import bs4
 import datetime
 import re
 
+num_format = '^(\d+|\d{1,3}(,\d{3})*)(\.\d+)?$'
 
-def _get_valid_time(time_str):
+def _get_date(date_str):
   """
   Attempts to parse a valid time using Amazon's format
   :param time_str: a string to parse
   :return: A valid datetime, or None if the conversion was invalid
   """
-  re.sub(' (\d) ', ' 0{} ', time_str)
+  re.sub(' (\d) ', ' 0{} ', date_str)
   try:
-    return datetime.datetime.strptime(time_str, '%B %d, %Y')
+    return datetime.datetime.strptime(date_str, '%B %d, %Y')
   except ValueError:
     return None
 
+
+def get_amazon_rating(html):
+  pass
 
 
 def get_page_count(html):
@@ -41,24 +45,48 @@ def get_review(html):
 
   review.text = hidden_review.find(class_='description').text
   review.verified = len(soup.find_all(class_='verifyWhatsThis')) > 0
-  review.timestamp = filter(None, [_get_valid_time(tag.text) for tag in soup.find_all('nobr')])[0]
+  review.timestamp = filter(None, [_get_date(tag.text) for tag in soup.find_all('nobr')])[0]
 
   reviewer_element = hidden_review.find(class_='reviewer').find(class_='url')
   review.reviewer_url = 'http://www.amazon.com' + reviewer_element['href']
 
-  vote_text = soup.find(text=re.compile('\d+ of \d+ people found the following review helpful'))
-  up, total = re.findall(r'\d+', vote_text)
-  review.upvote_count = int(up)
-  review.downvote_count = int(total) - int(up)
+  vote_text = soup.find(text=re.compile(num_format + ' of ' + num_format +
+                                        ' people found the following review helpful'))
+  if vote_text:
+    up, total = re.findall(re.compile(num_format), vote_text)
+    review.upvote_count = int(up)
+    review.downvote_count = int(total) - int(up)
+  else:
+    review.upvote_count = review.downvote_count = 0
 
-  rating_text = soup.find(title=re.compile('\d\.\d out of \d stars'))['title']
+  rating_text = soup.find(title=re.compile(num_format + ' out of ' + num_format + ' stars'))['title']
   review.rating = float(rating_text[:3])
 
   return review
 
 def get_profile(html):
-  pass
+  """
+  Parses a profile object based on an html string
+  :param html: A string containing the html of a profile page
+  :return: A profile object
+  """
+  profile = models.Reviewer()
+  dom = bs4.BeautifulSoup(html, 'html.parser')
 
+  profile.name = dom.find(class_='public-name-text')
+  profile.rank = int(dom.find(class_='bio-expander').find(text=re.compile('#' + num_format)).text)
+  profile.vote_count = int(dom.find(class_='bio-expander').find(text=re.compile(num_format)).text)
+  profile.creation_date = _get_date(dom.find_all(class_='glimpse-raw-timestamp').pop())
+
+  distribution = {i: 0 for i in range(1, 5)}
+  ratings = dom.find_all('i', class_=re.compile('a-icon-star'))
+  for rating in ratings:
+    val = int(re.findall(re.compile('[0-5]'), ''.join(rating['class']))[0])
+    distribution[val] += 1
+
+  profile.rating_distribution = distribution
+
+  return profile
 
 def get_product(xml):
   """
