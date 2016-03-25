@@ -19,10 +19,12 @@ import logging
 import scraper
 import pprint
 
+
 class MainHandler(webapp2.RequestHandler):
     def get(self):
         logging.info('hello world!')
         self.response.write('Hello world!')
+
 
 class ScraperHandler(webapp2.RequestHandler):
     def get(self):
