@@ -67,7 +67,7 @@ class FetcherHandler(webapp2.RequestHandler):
     fetch = fetcher.PageFetcher()
     logging.info('\n')
 
-    self.response.write(fetch.fetch_product('B00I15SB16'))
+    #self.response.write(fetch.fetch_product('B00I15SB16'))
     logging.info('\n')
     logging.info('\n')
     logging.info('\n')
@@ -75,7 +75,7 @@ class FetcherHandler(webapp2.RequestHandler):
     logging.info('\n')
     logging.info('\n')
     logging.info('\n')
-    #self.response.write(fetch.fetch_profiles(["http://www.amazon.com/gp/pdp/profile/A1AZ7G19GEHCFB/ref=cm_cr_dp_pdp"]))
+    self.response.write(fetch.fetch_profiles(["http://www.amazon.com/gp/pdp/profile/A1AZ7G19GEHCFB/ref=cm_cr_dp_pdp"]))
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
