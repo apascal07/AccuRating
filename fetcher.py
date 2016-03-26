@@ -1,23 +1,46 @@
 """Fetcher retrieves remote pages from the Amazon platform."""
 
-from google.appengine.api import urlfetch
-import selenium_lib
+import logging
+import re
 
+import bs4
+import amazonproduct
+from amazonproduct import errors
+from amazonproduct import processors
+from google.appengine.api import urlfetch
+
+
+class SoupProcessor (processors.BaseProcessor):
+  """
+  Custom response parser using BeautifulSoup to parse the returned XML.
+  """
+
+  def parse(self, fp):
+
+    soup = bs4.BeautifulSoup(fp.read(), 'html.parser')
+
+    # parse errors
+    for error in soup.findAll('error'):
+        code = error.find('code').text
+        msg = error.find('message').text
+        raise errors.AWSError(code, msg)
+
+    return soup
 
 class PageFetcher:
-  """"""
+  """Fetches the html for a specified page"""
   def __init__(self):
-    pass
+    self.api = amazonproduct.API(locale='us', cfg='lib/.amazon-product-api', processor=SoupProcessor())
 
   def fetch_product(self, asin):
-    pass
+    return self.api.item_lookup(asin, ResponseGroup='EditorialReview', paginate=False)
 
   def fetch_pages(self, urls):
     """Generic function to fetch multiple pages at once"""
     num_requests = 0
     max_requests = 100
     results = []
-    url_groups = [urls[x:x+max_requests] for x in xrange(0, len(urls), 100)]
+    url_groups = [urls[x:x + max_requests] for x in xrange(0, len(urls), 100)]
     for url_group in url_groups:
       results.extend(self._fetch_pages(url_group))
     return results
@@ -26,27 +49,65 @@ class PageFetcher:
     """Helper function that makes the page fetch request and waits for the response"""
     rpcs = []
     results = []
+    hdr = {
+      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+      'Accept-Encoding': 'none',
+      'Accept-Language': 'en-US,en;q=0.8',
+      'Connection': 'keep-alive'}
 
-    for url in urls:
-      rpc = urlfetch.create_rpc()
-      rpcs.append(rpc)
-      urlfetch.make_fetch_call(rpc, url)
-    for rpc in rpcs:
-      rpc.wait()
-      results.append(rpc.get_result().content)
-
-    return results
-
-  def fetch_profile(self, url):
-    """Uses selenium to load all the reviews on the profile page and returns the final page html"""
     try:
-      browser = selenium_lib.SeleniumLib()
-      browser.open_page(url)
-      while True:
-        refresh_el = browser.driver.find_element_by_class_name("glimpse-main-pagination-trigger")
-        if refresh_el.get_attribute('token'):
-          browser.scroll_into_view(id, "refresh")
-    except Exception as eee:
-      pass
+      for url in urls:
+        rpc = urlfetch.create_rpc()
+        rpcs.append(rpc)
+        urlfetch.make_fetch_call(rpc, url, headers=hdr)
+      for rpc in rpcs:
+        rpc.wait()
+        results.append(rpc.get_result().content)
 
-    return refresh_el.get_attribute("outerHTML")
+      return results
+    except Exception as eee:
+      raise Exception("Failed to fetch page: {}".format(eee))
+
+  def fetch_profiles(self, urls):
+    """Uses loads all the reviews on the profile page and returns the final page html"""
+
+    pattern = '(<div data-glimpse_path.*?>)'
+    pages = []
+    complete_pages = []
+    try:
+      responses = self.fetch_pages(urls)
+      for i, response in enumerate(responses):
+        pages.append(responses)
+        tag = self._get_div_tag_contents(response, pattern)
+        urls[i] = "http://www.amazon.com/{}".format(tag['data-glimpse_path'])
+
+      pattern = '^(<div class="glimpse-main-pagination-trigger".*?<\/div>)'
+      while urls:
+        responses = self.fetch_pages(urls)
+        for i, page in enumerate(responses):
+          tag = self._get_div_tag_contents(page, pattern)
+          try:
+            tag['token'] = tag['token'].replace('=', '')
+            urls[i] = ('{}?token={}%3D%3D&context={}&id={}&preview='.
+                       format(tag['data-url'], tag['token'], tag['data-feed-context'],
+                              tag['data-feed-id'], tag['data-preview-mode']))
+            logging.info(urls)
+            pages[i] = pages[i] + "\n" + page
+          except:
+            urls.pop[i]
+            complete_pages.append(pages.pop[i])
+      return complete_pages
+    except Exception as eee:
+      raise Exception('Failed to fetch user profiles: {}'.format(eee))
+
+  def _get_div_tag_contents(self, html, pattern):
+    """"""
+    matches = re.findall(pattern, html, re.MULTILINE | re.DOTALL)
+
+    if matches:
+      soup = bs4.BeautifulSoup(matches[0])
+      return soup.div
+    raise Exception("Expected to find a match for pattern {}".format(pattern))
+
