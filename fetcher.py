@@ -27,6 +27,7 @@ class SoupProcessor (processors.BaseProcessor):
 
     return soup
 
+
 class PageFetcher:
   """Fetches the html for a specified page"""
   def __init__(self):
@@ -34,6 +35,7 @@ class PageFetcher:
 
   def fetch_product(self, asin):
     # Fetch the product description.
+
     return self.api.item_lookup(asin, ResponseGroup='EditorialReview', paginate=False)
 
   def fetch_pages(self, urls):
@@ -52,14 +54,15 @@ class PageFetcher:
     rpcs = []
     results = []
     # Set the headers to appear as if we are using a real browser.
-    # Appengine plays with these results to state the request is coming from Appengine
+    # AppEngine plays with these results to state the request is coming from AppEngine
     hdr = {
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-      'Accept-Encoding': 'none',
-      'Accept-Language': 'en-US,en;q=0.8',
-      'Connection': 'keep-alive'}
+           'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) '
+                          'Chrome/23.0.1271.64 Safari/537.11'),
+           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+           'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+           'Accept-Encoding': 'none',
+           'Accept-Language': 'en-US,en;q=0.8',
+           'Connection': 'keep-alive'}
 
     try:
       # Fetch all urls asynchronously
@@ -67,14 +70,15 @@ class PageFetcher:
         rpc = urlfetch.create_rpc()
         rpcs.append(rpc)
         urlfetch.make_fetch_call(rpc, url, headers=hdr)
-      # Process all of the responces
+      # Process all of the responses
       for rpc in rpcs:
         rpc.wait()
         results.append(rpc.get_result().content)
 
       return results
     except Exception as eee:
-      raise Exception("Failed to fetch page: {}".format(eee))
+      logging.error("Failed to fetch page: {}".format(eee))
+      raise
 
   def fetch_profiles(self, urls):
     """Uses loads all the reviews on the profile page and returns the final page html"""
@@ -111,7 +115,8 @@ class PageFetcher:
             complete_pages.append(pages.pop(i))
       return complete_pages
     except Exception as eee:
-      raise Exception('Failed to fetch user profiles: {}'.format(eee))
+      logging.error('Failed to fetch user profiles: {}'.format(eee))
+      raise
 
   def _get_div_tag_contents(self, html, pattern):
     """"""
