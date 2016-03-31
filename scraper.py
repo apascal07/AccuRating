@@ -21,23 +21,23 @@ def _get_date(date_str):
 
 def get_reviews_url(html):
   dom = bs4.BeautifulSoup(html, 'html.parser')
-  return dom.find(class_='crIframeReviewList').find('span', class_='small').b.a['href']
+  return dom.select('.crIframeReviewList span.small > b > a')[0]['href']
 
 
 def get_amazon_rating(html):
   dom = bs4.BeautifulSoup(html, 'html.parser')
-  return float(dom.find_all(class_='arp-rating-out-of-text').pop().text[:3])
+  return float(dom.select('.arp-rating-out-of-text').pop().text[:3])
 
 
 def get_page_count(html):
   dom = bs4.BeautifulSoup(html, 'html.parser')
-  return int(dom.find_all(class_='page-button').pop().text)
+  return int(dom.select('.page-button').pop().text)
 
 
 def get_review_url_list(html):
   dom = bs4.BeautifulSoup(html, 'html.parser')
-  titles = dom.find_all('a', class_='review-title')
-  return ['http://www.amazon.com' + title['href'] for title in titles]
+  titles = dom.select('a.review-title')
+  return ['http://www.amazon.com{}'.format(title['href']) for title in titles]
 
 
 def get_review(html):
@@ -47,19 +47,17 @@ def get_review(html):
   :return: A parsed reviewer object
   """
   review = models.Review()
-  soup = bs4.BeautifulSoup(html, 'html.parser')
+  dom = bs4.BeautifulSoup(html, 'html.parser')
 
   # parse the 'hReview' element that contains several needed pieces of data
-  hidden_review = soup.find_all(class_='hReview')[0]
+  review.text = dom.select('.hReview .description')[0].text
+  review.verified = len(dom.select('.verifyWhatsThis')) > 0
+  review.timestamp = filter(None, [_get_date(tag.text) for tag in dom.select('nobr')])[0]
 
-  review.text = hidden_review.find(class_='description').text
-  review.verified = len(soup.find_all(class_='verifyWhatsThis')) > 0
-  review.timestamp = filter(None, [_get_date(tag.text) for tag in soup.find_all('nobr')])[0]
+  reviewer_element = dom.select('.hReview .reviewer .url')[0]
+  review.reviewer_url = 'http://www.amazon.com'.format(reviewer_element['href'])
 
-  reviewer_element = hidden_review.find(class_='reviewer').find(class_='url')
-  review.reviewer_url = 'http://www.amazon.com' + reviewer_element['href']
-
-  vote_text = soup.find(text=re.compile(num_format + ' of ' + num_format +
+  vote_text = dom.find(text=re.compile(num_format + ' of ' + num_format +
                                         ' people found the following review helpful'))
   if vote_text:
     up, total = re.findall(re.compile(num_format), vote_text)
@@ -68,35 +66,19 @@ def get_review(html):
   else:
     review.upvote_count = review.downvote_count = 0
 
-  rating_text = soup.find(title=re.compile('[1-5]\.[0-5] out of [1-5] stars'))['title']
+  rating_text = dom.find(title=re.compile('[1-5]\.[0-5] out of [1-5] stars'))['title']
   review.rating = float(rating_text[:3])
 
   return review
 
-def get_profile(html):
+def get_rank(html):
   """
   Parses a profile object based on an html string
   :param html: A string containing the html of a profile page
   :return: A profile object
   """
-  profile = models.Reviewer()
   dom = bs4.BeautifulSoup(html, 'html.parser')
-
-  profile.name = dom.find(class_='public-name-text').text
-  profile.rank = int(dom.find(class_='bio-expander').find(text=re.compile('#' + num_format))[1:].replace(',', ''))
-  profile.vote_count = int(dom.find(class_='bio-expander').find(text=re.compile(num_format)).replace(',', ''))
-  date_str = dom.find_all(class_='glimpse-raw-timestamp').pop().text
-  profile.creation_date = datetime.datetime.strptime(date_str, '%b %d, %Y')
-
-  distribution = {i: 0 for i in range(1, 6)}
-  ratings = dom.find_all('i', class_=re.compile('a-icon-star'))
-  for rating in ratings:
-    val = int(re.findall(re.compile('[0-5]'), ''.join(rating['class']))[0])
-    distribution[val] += 1
-
-  profile.rating_distribution = distribution
-
-  return profile
+  return int(dom.select('.bio-expander')[0].find(text=re.compile('#' + num_format))[1:].replace(',', ''))
 
 def get_product(xml):
   """
@@ -105,8 +87,8 @@ def get_product(xml):
   :return: A product object
   """
   product = models.Product()
-  soup = bs4.BeautifulSoup(xml, 'html.parser')
-  xml = soup.itemlookupresponse.items.item
+  dom = bs4.BeautifulSoup(xml, 'html.parser')
+  xml = dom.itemlookupresponse.items.item
 
   product.title = xml.itemattributes.title.string
   product.product_url = xml.detailpageurl.string
