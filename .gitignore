@@ -1,6 +1,5 @@
-.gitignore
 .DS_Store
-*.pyc
 .idea
 .git
-test_files
+*.pyc
+lib/.amazon-product-api
