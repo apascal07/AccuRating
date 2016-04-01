@@ -21,6 +21,13 @@ import pprint
 import fetcher
 
 
+def _pstring(dict):
+  s = ''
+  for k, v in dict.iteritems():
+    s += '<b>{}</b>: {}<br />'.format(k, v)
+  return s
+
+
 class MainHandler(webapp2.RequestHandler):
   def get(self):
     logging.info('hello world!')
@@ -28,36 +35,38 @@ class MainHandler(webapp2.RequestHandler):
 
 
 class ScraperHandler(webapp2.RequestHandler):
-  def get(self):
-    pp = pprint.PrettyPrinter(indent=4)
+  def get(self, asin):
+    fetch = fetcher.PageFetcher()
+
+    self.response.write(fetch.fetch_product(asin))
 
     product = open('./test_files/product.xml').read()
-    self.response.write('<b>Get product: </b><br />')
-    self.response.write(pp.pformat(scraper.get_product(product)))
+    self.response.write('<b><u>Get product: </b></u><br />')
+    self.response.write(_pstring(scraper.get_product(product).__dict__['_values']))
     self.response.write('<br /><br />')
 
     review = open('./test_files/review.html').read()
-    self.response.write('<b>Get review: </b><br />')
-    self.response.write(pp.pformat(scraper.get_review(review)))
+    self.response.write('<b><u>Get review: </b></u><br />')
+    self.response.write(_pstring(scraper.get_review(review).__dict__['_values']))
     self.response.write('<br /><br />')
 
     profile = open('./test_files/profile.html').read()
-    self.response.write('<b>Get profile: </b><br />')
-    self.response.write(pp.pformat(scraper.get_profile(profile)))
+    self.response.write('<b><u>Get rank: </b></u>')
+    self.response.write(scraper.get_rank(profile))
     self.response.write('<br /><br />')
 
     reviews_iframe = open('./test_files/reviews_iframe.html').read()
-    self.response.write('<b>Get reviews url: </b>')
-    self.response.write(pp.pformat(scraper.get_reviews_url(reviews_iframe)))
+    self.response.write('<b><u>Get reviews url: </b></u>')
+    self.response.write(scraper.get_reviews_url(reviews_iframe))
     self.response.write('<br /><br />')
 
     review_list = open('./test_files/review_list.html').read()
-    self.response.write('<b>Get page count: </b>')
-    self.response.write(pp.pformat(scraper.get_page_count(review_list)))
-    self.response.write('<br /><br /><b>Get amazon rating: </b>')
-    self.response.write(pp.pformat(scraper.get_amazon_rating(review_list)))
-    self.response.write('<br /><br /><b>Get review URL list: </b><br />')
-    self.response.write(pp.pformat(scraper.get_review_url_list(review_list)))
+    self.response.write('<b><u>Get page count: </b></u>')
+    self.response.write(scraper.get_page_count(review_list))
+    self.response.write('<br /><br /><b><u>Get amazon rating: </b></u>')
+    self.response.write(scraper.get_amazon_rating(review_list))
+    self.response.write('<br /><br /><b><u>Get review URL list: </b></u><br />')
+    self.response.write(scraper.get_review_url_list(review_list))
 
 
 class FetcherHandler(webapp2.RequestHandler):
@@ -79,6 +88,6 @@ class FetcherHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
-    ('/scraper', ScraperHandler),
+    ('/scraper/(.+)', ScraperHandler),
     ('/fetcher', FetcherHandler)
 ], debug=True)
