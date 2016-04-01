@@ -81,11 +81,13 @@ def get_review(html):
   # parse the 'hReview' element that contains several needed pieces of data
   review.text = _select(dom, '.hReview .description').text
   review.verified = _select(dom, '.verifyWhatsThis', important=False) is not None
-  review.timestamp = filter(None, [_get_date(tag.text) for tag in _select_all(dom, 'nobr')])[0]
+  dates = [_get_date(tag.text) for tag in _select_all(dom, 'nobr')]
+  review.timestamp = filter(None, dates)[0]
 
   reviewer_element = _select(dom, '.hReview .reviewer .url')
   review.reviewer_url = 'http://www.amazon.com{}'.format(reviewer_element['href'])
-  vote_regex = re.compile('{0} of {0} people found the following review helpful'.format(num_format))
+  vote_regex = re.compile('{0} of {0} people found the following review helpful'
+                          .format(num_format))
   vote_text = _find(dom, text=vote_regex, important=False)
   if vote_text:
     up, total = re.findall(re.compile(num_format), vote_text)
@@ -94,7 +96,7 @@ def get_review(html):
   else:
     review.upvote_count = review.downvote_count = 0
 
-  rating_text = _find(dom, title=re.compile('[1-5]\.[0-5] out of [1-5] stars'))['title']
+  rating_text = _find(dom, title=re.compile('[1-5]\.[0-5] out of 5 stars'))['title']
   review.rating = float(rating_text[:3])
 
   return review
@@ -106,7 +108,8 @@ def get_rank(html):
   :return: A profile object
   """
   dom = bs4.BeautifulSoup(html, 'html.parser')
-  return int(_find(_select(dom, '.bio-expander'), text=re.compile('#' + num_format))[1:].replace(',', ''))
+  return int(_find(_select(dom, '.bio-expander'),
+                   text=re.compile('#' + num_format))[1:].replace(',', ''))
 
 def get_product(xml):
   """
@@ -115,8 +118,8 @@ def get_product(xml):
   :return: A product object
   """
   dom = bs4.BeautifulSoup(xml, 'html.parser')
-  product = models.Product()
   xml = _select(dom, 'itemlookupresponse > items > item')
+  product = models.Product(id=_select(xml, 'asin'))
 
   product.title = _select(xml, 'itemattributes > title').string
   product.product_url = _select(xml, 'detailpageurl').string

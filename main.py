@@ -17,7 +17,6 @@
 import webapp2
 import logging
 import scraper
-import pprint
 import fetcher
 
 
@@ -42,7 +41,7 @@ class ScraperHandler(webapp2.RequestHandler):
 
     product = open('./test_files/product.xml').read()
     self.response.write('<b><u>Get product: </b></u><br />')
-    self.response.write(_pstring(scraper.get_product(product).__dict__['_values']))
+    self.response.write(_pstring(scraper.get_product(fetch.fetch_product(asin)).__dict__['_values']))
     self.response.write('<br /><br />')
 
     review = open('./test_files/review.html').read()
