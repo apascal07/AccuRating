@@ -35,8 +35,8 @@ class PageFetcher:
 
   def fetch_product(self, asin):
     # Fetch the product description.
-
-    return self.api.item_lookup(asin, ResponseGroup='EditorialReview', paginate=False)
+    response_groups = ['EditorialReview', 'ItemAttributes', 'Reviews']
+    return self.api.item_lookup(asin, ResponseGroup=", ".join(response_groups), paginate=False)
 
   def fetch_pages(self, urls):
     """Generic function to fetch multiple pages at once"""
