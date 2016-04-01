@@ -98,6 +98,9 @@ class Product(ndb.Model):
     reviews = reviews or Review.get_all_by_ids(self.reviews)
     training_set = (training_set or self.training_set or
                     TrainingSet.get_latest_set())
+    # Unable to get a weighted rating if there are no weights.
+    if not training_set:
+      return None
     # Sum up the products of each criteria and its weight.
     total = 0.0
     for review in reviews:
