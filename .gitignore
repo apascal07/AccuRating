@@ -3,3 +3,4 @@
 .git
 *.pyc
 lib/.amazon-product-api
+test_files
