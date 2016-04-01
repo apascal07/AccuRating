@@ -1,4 +1,3 @@
-import engine
 import logging
 import models
 
@@ -10,8 +9,10 @@ def get_product(asin):
   # TODO: invalidate a product after a certain time delta (24-48 hours)
   if not product:
     logging.info('Product #{} not in datastore. Creating...')
-    product = engine.create_product(asin)
-    if not product:
+    try:
+      product = models.Product.create_product(asin)
+    except Exception as e:
+      logging.info('Error: {}'.format(e))
       logging.info('Failed to create product #{}.'.format(asin))
       return None
   return product
