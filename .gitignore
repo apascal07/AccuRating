@@ -4,4 +4,6 @@
 *.pyc
 lib/amazon-product-api.conf
 lib/.amazon-product-api
+lib/amazon-product-api
+lib/amazon-product-api.conf
 test_files

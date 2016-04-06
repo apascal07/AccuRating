@@ -17,7 +17,7 @@ class Product(ndb.Model):
   description = ndb.TextProperty(indexed=False)
   reviews = ndb.KeyProperty(indexed=False, kind='Review', repeated=True)
   retrieval_timestamp = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
-  newest_timestamp = ndb.DateTimePropery(indexed=False)
+  newest_timestamp = ndb.DateTimeProperty(indexed=False)
   oldest_timestamp = ndb.DateTimeProperty(indexed=False)
   amazon_rating = ndb.FloatProperty(indexed=False)
 
@@ -72,11 +72,12 @@ class Product(ndb.Model):
   @common.timer
   def set_dynamic_criteria(self):
     """Generates and sets all dynamic criteria values."""
-    reviews = Review.query().filter(Review.key.IN(self.reviews)).fetch()
+    reviews = Review.get_all_by_ids(self.reviews)
     text_parser = parser.Parser(reviews, self.description)
     total = 0.0
     for review in reviews:
-      review.set_dynamic_criteria(text_parser, self.oldest_date)
+      review.set_dynamic_criteria(text_parser, self.oldest_timestamp,
+                                  self.newest_timestamp)
       total += review.rating
     self.average_rating = total / len(reviews)
     self.put()
@@ -185,8 +186,8 @@ class TrainingSet(ndb.Model):
   end_timestamp = ndb.DateTimeProperty(indexed=True)
   criteria_weights = ndb.PickleProperty(indexed=False)
   review_count_limit = ndb.IntegerProperty(indexed=False)
-  product_sample = ndb.KeyProperty(indexed=True, kind='Product', repeated=True)
+  product_sample = ndb.KeyProperty(indexed=True, kind='Product')
 
   @classmethod
   def get_latest_set(self):
-    return self.query().order(-TrainingSet.end_timestamp).fetch(1) or None
+    return self.query().order(-TrainingSet.end_timestamp).get()

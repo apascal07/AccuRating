@@ -16,15 +16,21 @@
 #
 import webapp2
 import logging
+import search
 import scraper
 import fetcher
+import pprint
+import cgi
 
 
-def _pstring(dict):
+def _pstring(obj):
   s = ''
-  for k, v in dict.iteritems():
-    s += '<b>{}</b>: {}<br />'.format(k, v)
-  return s
+  try:
+    for k, v in obj.__dict__['_values'].iteritems():
+      s += '<b>{}</b>: {}<br />'.format(k, v)
+    return s
+  except (KeyError, AttributeError):
+    return obj
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -33,39 +39,41 @@ class MainHandler(webapp2.RequestHandler):
     self.response.write('Hello world!')
 
 
-class ScraperHandler(webapp2.RequestHandler):
+class SearchHandler(webapp2.RequestHandler):
   def get(self, asin):
+    logging.info('Running search handler.')
+    product = search.get_product(asin)
+    pprint.pprint(product)
+    self.response.write(product)
+
+
+class ScraperHandler(webapp2.RequestHandler):
+  def get(self):
+    params = self.request.GET
     fetch = fetcher.PageFetcher()
 
-    self.response.write(fetch.fetch_product(asin))
+    if params['product']:
+      product = scraper.get_product(fetch.fetch_product(params['product']))
+      reviews_url = scraper.get_reviews_url(fetch.fetch_pages([product.reviews_url])[0])
+      review_list = fetch.fetch_pages([reviews_url])[0]
+      if 'review' in params:
+        review_url = 'http://www.amazon.com/review/{}'.format(params['review'])
+      else:
+        review_url = scraper.get_review_url_list(review_list)[0]
+      review = scraper.get_review(fetch.fetch_pages([review_url])[0])
 
-    product = open('./test_files/product.xml').read()
-    self.response.write('<b><u>Get product: </b></u><br />')
-    self.response.write(_pstring(scraper.get_product(fetch.fetch_product(asin)).__dict__['_values']))
-    self.response.write('<br /><br />')
+      results = {
+          'Get product': product,
+          'Get reviews url': reviews_url,
+          'Get Page count': scraper.get_page_count(review_list),
+          'Get Amazon Rating': scraper.get_amazon_rating(review_list),
+          'Get Review URL List': scraper.get_review_url_list(review_list),
+          'Get Review': review,
+          'Get Rank': scraper.get_rank(fetch.fetch_pages([review.reviewer_url])[0])
+      }
 
-    review = open('./test_files/review.html').read()
-    self.response.write('<b><u>Get review: </b></u><br />')
-    self.response.write(_pstring(scraper.get_review(review).__dict__['_values']))
-    self.response.write('<br /><br />')
-
-    profile = open('./test_files/profile.html').read()
-    self.response.write('<b><u>Get rank: </b></u>')
-    self.response.write(scraper.get_rank(profile))
-    self.response.write('<br /><br />')
-
-    reviews_iframe = open('./test_files/reviews_iframe.html').read()
-    self.response.write('<b><u>Get reviews url: </b></u>')
-    self.response.write(scraper.get_reviews_url(reviews_iframe))
-    self.response.write('<br /><br />')
-
-    review_list = open('./test_files/review_list.html').read()
-    self.response.write('<b><u>Get page count: </b></u>')
-    self.response.write(scraper.get_page_count(review_list))
-    self.response.write('<br /><br /><b><u>Get amazon rating: </b></u>')
-    self.response.write(scraper.get_amazon_rating(review_list))
-    self.response.write('<br /><br /><b><u>Get review URL list: </b></u><br />')
-    self.response.write(scraper.get_review_url_list(review_list))
+      for val in results:
+        self.response.write('<b><u>{}:</b></u> {}<br />'.format(val, _pstring(results[val])))
 
 
 class FetcherHandler(webapp2.RequestHandler):
@@ -87,6 +95,7 @@ class FetcherHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
-    ('/scraper/(.+)', ScraperHandler),
+    ('/search/(.+)', SearchHandler),
+    ('/scraper', ScraperHandler),
     ('/fetcher', FetcherHandler)
 ], debug=True)
