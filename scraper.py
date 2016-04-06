@@ -75,7 +75,11 @@ def get_page_count(html):
   :return: Number of pages as an int
   """
   dom = bs4.BeautifulSoup(html, 'html.parser')
-  return int(_select_all(dom, '.page-button').pop().text)
+  page_buttons = _select_all(dom, '.page-button', important=False)
+  if page_buttons:
+    return int(page_buttons.pop().text)
+  else:
+    return 1
 
 
 def get_review_url_list(html):
