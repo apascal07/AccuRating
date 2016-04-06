@@ -17,7 +17,7 @@ class Product(ndb.Model):
   description = ndb.TextProperty(indexed=False)
   reviews = ndb.KeyProperty(indexed=False, kind='Review', repeated=True)
   retrieval_timestamp = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
-  newest_timestamp = ndb.DateTimePropery(indexed=False)
+  newest_timestamp = ndb.DateTimeProperty(indexed=False)
   oldest_timestamp = ndb.DateTimeProperty(indexed=False)
   amazon_rating = ndb.FloatProperty(indexed=False)
 

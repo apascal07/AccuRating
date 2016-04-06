@@ -16,8 +16,10 @@
 #
 import webapp2
 import logging
+import search
 import scraper
 import fetcher
+import pprint
 
 
 def _pstring(dict):
@@ -31,6 +33,14 @@ class MainHandler(webapp2.RequestHandler):
   def get(self):
     logging.info('hello world!')
     self.response.write('Hello world!')
+
+
+class SearchHandler(webapp2.RequestHandler):
+  def get(self, asin):
+    logging.info('Running search handler.')
+    product = search.get_product(asin)
+    pprint.pprint(product)
+    self.response.write(product)
 
 
 class ScraperHandler(webapp2.RequestHandler):
@@ -88,5 +98,6 @@ class FetcherHandler(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/scraper/(.+)', ScraperHandler),
+    ('/search/(.+)', SearchHandler),
     ('/fetcher', FetcherHandler)
 ], debug=True)
