@@ -31,7 +31,7 @@ class SoupProcessor (processors.BaseProcessor):
 class PageFetcher:
   """Fetches the html for a specified page"""
   def __init__(self):
-    self.api = amazonproduct.API(locale='us', cfg='lib/.amazon-product-api', processor=SoupProcessor())
+    self.api = amazonproduct.API(locale='us', cfg='lib/amazon-product-api.conf', processor=SoupProcessor())
 
   def fetch_product(self, asin):
     # Fetch the product description.
