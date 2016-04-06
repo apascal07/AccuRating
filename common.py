@@ -2,6 +2,7 @@ import logging
 import math
 import time
 import urllib
+import urlparse
 
 
 def update_url(url, parameters, append=True):
@@ -12,8 +13,8 @@ def update_url(url, parameters, append=True):
   url = urllib.unquote(url)
   # update the parameter dictionary with the old parameters
   if append:
-    parsed_url = urllib.urlparse(url)
-    old_parameters = dict(urllib.parse_qsl(parsed_url.query))
+    parsed_url = urlparse.urlparse(url)
+    old_parameters = dict(urlparse.parse_qsl(parsed_url.query))
     parameters.update(old_parameters)
   # encode the parameter query string and recreate the full URL again
   query = urllib.urlencode(old_parameters)
