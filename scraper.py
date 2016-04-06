@@ -4,7 +4,7 @@ import bs4
 import datetime
 import re
 
-num_format = '(\d+|\d{1,3}(,\d{3})*)(\.\d+)?$'
+num_format = '(\d+(?:\,\d{3})*)'
 
 
 def _get_date(date_str):
@@ -49,21 +49,41 @@ def _find_all(element, important=True, **kwargs):
 
 
 def get_reviews_url(html):
+  """
+  Gets the URL of a product's reviews
+  :param html: The HTML of the product's review iFrame
+  :return: The URL of the product's reviews
+  """
   dom = bs4.BeautifulSoup(html, 'html.parser')
   return _select(dom, '.crIframeReviewList span.small > b > a')['href']
 
 
 def get_amazon_rating(html):
+  """
+  Gets the amazon rating of a product
+  :param html: A string containing the html of a product ratings page
+  :return: The amazon rating of a product as a double
+  """
   dom = bs4.BeautifulSoup(html, 'html.parser')
   return float(_select(dom, '.arp-rating-out-of-text').text[:3])
 
 
 def get_page_count(html):
+  """
+  Gets the number of review pages belonging to a product
+  :param html: A string containing the html of a product ratings page
+  :return: Number of pages as an int
+  """
   dom = bs4.BeautifulSoup(html, 'html.parser')
   return int(_select_all(dom, '.page-button').pop().text)
 
 
 def get_review_url_list(html):
+  """
+  Returns a list of URLs that link to amazon reviews
+  :param html: A string containing the html of a product ratings page
+  :return: A list of URL strings
+  """
   dom = bs4.BeautifulSoup(html, 'html.parser')
   titles = _select_all(dom, 'a.review-title')
   return ['http://www.amazon.com{}'.format(title['href']) for title in titles]
@@ -77,7 +97,6 @@ def get_review(html):
   """
   review = models.Review()
   dom = bs4.BeautifulSoup(html, 'html.parser')
-
   # parse the 'hReview' element that contains several needed pieces of data
   review.text = _select(dom, '.hReview .description').text
   review.verified = _select(dom, '.verifyWhatsThis', important=False) is not None
@@ -86,11 +105,10 @@ def get_review(html):
 
   reviewer_element = _select(dom, '.hReview .reviewer .url')
   review.reviewer_url = 'http://www.amazon.com{}'.format(reviewer_element['href'])
-  vote_regex = re.compile('{0} of {0} people found the following review helpful'
-                          .format(num_format))
-  vote_text = _find(dom, text=vote_regex, important=False)
+  vote_text = _select(dom, '.reviewText').parent.find('div', text=re.compile('^\s+{0} of {0} .+'.format(num_format)))
+
   if vote_text:
-    up, total = re.findall(re.compile(num_format), vote_text)
+    up, total = re.findall(re.compile(num_format), vote_text.text)
     review.upvote_count = int(up)
     review.downvote_count = int(total) - int(up)
   else:
@@ -108,8 +126,12 @@ def get_rank(html):
   :return: A profile object
   """
   dom = bs4.BeautifulSoup(html, 'html.parser')
-  return int(_find(_select(dom, '.bio-expander'),
-                   text=re.compile('#' + num_format))[1:].replace(',', ''))
+  bio = _select(dom, '.bio-expander', important=False)
+  if bio:
+    return int(_find(bio, text=re.compile('#' + num_format))[1:].replace(',', ''))
+  else:
+    return None
+
 
 def get_product(xml):
   """
@@ -119,7 +141,7 @@ def get_product(xml):
   """
   dom = bs4.BeautifulSoup(xml, 'html.parser')
   xml = _select(dom, 'itemlookupresponse > items > item')
-  product = models.Product(id=_select(xml, 'asin'))
+  product = models.Product(id=_select(xml, 'asin').text)
 
   product.title = _select(xml, 'itemattributes > title').string
   product.product_url = _select(xml, 'detailpageurl').string
