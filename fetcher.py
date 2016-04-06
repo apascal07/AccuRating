@@ -1,5 +1,6 @@
 """Fetcher retrieves remote pages from the Amazon platform."""
 
+import common
 import logging
 import re
 
@@ -31,13 +32,15 @@ class SoupProcessor (processors.BaseProcessor):
 class PageFetcher:
   """Fetches the html for a specified page"""
   def __init__(self):
-    self.api = amazonproduct.API(locale='us', cfg='lib/.amazon-product-api', processor=SoupProcessor())
+    self.api = amazonproduct.API(locale='us', cfg='lib/amazon-product-api.conf', processor=SoupProcessor())
 
+  @common.timer
   def fetch_product(self, asin):
     # Fetch the product description.
     response_groups = ['EditorialReview', 'ItemAttributes', 'Reviews']
     return str(self.api.item_lookup(asin, ResponseGroup=", ".join(response_groups), paginate=False))
 
+  @common.timer
   def fetch_pages(self, urls):
     """Generic function to fetch multiple pages at once"""
     num_requests = 0
@@ -79,6 +82,7 @@ class PageFetcher:
       logging.error("Failed to fetch page: {}".format(eee))
       raise
 
+  @common.timer
   def fetch_profiles(self, urls):
     """Uses loads all the reviews on the profile page and returns the final page html"""
 
