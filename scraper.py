@@ -102,7 +102,7 @@ def get_review(html):
   review = models.Review()
   dom = bs4.BeautifulSoup(html, 'html.parser')
   # parse the 'hReview' element that contains several needed pieces of data
-  review.text = _select(dom, '.hReview .description').text
+  review.text = _select(dom, '.reviewText').text
   review.verified = _select(dom, '.verifyWhatsThis', important=False) is not None
   dates = [_get_date(tag.text) for tag in _select_all(dom, 'nobr')]
   review.timestamp = filter(None, dates)[0]
