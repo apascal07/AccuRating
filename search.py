@@ -8,13 +8,8 @@ def get_product(asin):
   product = models.Product.get_by_id(asin)
   # TODO: invalidate a product after a certain time delta (24-48 hours)
   if not product:
-    logging.info('Product #{} not in datastore. Creating...')
-    try:
-      product = models.Product.create_product(asin)
-    except Exception as e:
-      logging.info('Error: {}'.format(e))
-      logging.info('Failed to create product #{}.'.format(asin))
-      return None
+    logging.info('Product #{} not in datastore. Creating...'.format(asin))
+    product = models.Product.create_product(asin)
   return product
 
 
@@ -25,9 +20,4 @@ def get_top_reviews(product_id):
 
 def get_reviews(review_ids):
   """Retrieves a list of Review objects for a given list of review IDs."""
-  pass
-
-
-def get_reviewers(reviewer_ids):
-  """Retrieves a list of Reviewer objects for a given list of reviewer IDs."""
   pass
