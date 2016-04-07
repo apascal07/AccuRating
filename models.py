@@ -4,6 +4,7 @@ import fetcher
 import logging
 import math
 import parser
+import pprint
 import scraper
 from google.appengine.ext import ndb
 
@@ -37,31 +38,29 @@ class Product(ndb.Model):
     # Fetch product metadata from the Amazon API and create a Product object.
     product_meta = page_fetcher.fetch_product(asin)
     product = scraper.get_product(product_meta)
-    # Fetch the summary review page and extract the first review list page URL.
-    #base_page = page_fetcher.fetch_pages([product.reviews_url])[0]
-    #product.reviews_url = scraper.get_reviews_url(base_page)
     # Fetch the first review list page and extract the page count and rating.
-    product_reviews_url = PRODUCT_REVIEWS_URL.format(asin=asin)
-    first_page = page_fetcher.fetch_pages([product_reviews_url])[0]
+    reviews_url = PRODUCT_REVIEWS_URL.format(asin=asin)
+    first_page = page_fetcher.fetch_pages([reviews_url])[0]
     page_count = scraper.get_page_count(first_page) or 1
     product.amazon_rating = scraper.get_amazon_rating(first_page)
     # Compile a list of review list page URLs and fetch all review list pages.
-    review_list_urls = [common.update_url(product.reviews_url, {'page': page})
-                        for page in range(page_count)]
-    review_list_pages = page_fetcher.fetch_pages(review_list_urls)
-    review_list_pages.append(first_page)
+    review_list_pages = [first_page]
+    if page_count > 1:
+      review_list_urls = [common.update_url(reviews_url, {'page': page})
+                          for page in range(2, page_count + 1)]
+      review_list_pages.extend(page_fetcher.fetch_pages(review_list_urls))
     # Compile a list of all of the review page URLs and fetch all review pages.
     review_page_urls = []
     for review_list_page in review_list_pages:
       review_page_urls.extend(scraper.get_review_url_list(review_list_page))
     review_pages = page_fetcher.fetch_pages(review_page_urls)
     # Create Review objects, update oldest/newest review date, and save.
-    product.oldest_date = datetime.datetime.now()
-    product.newest_date = datetime.datetime(1970, 1, 1)
+    product.oldest = datetime.datetime.now()
+    product.newest = datetime.datetime(1970, 1, 1)
     for review_page in review_pages:
       review = scraper.get_review(review_page)
-      product.oldest_date = min(product.oldest_date, review.timestamp)
-      product.newest_date = max(product.newest_date, review.timestamp)
+      product.oldest = min(product.oldest, review.timestamp)
+      product.newest = max(product.newest, review.timestamp)
       reviewer_page = page_fetcher.fetch_pages([review.reviewer_url])[0]
       review.reviewer_rank = scraper.get_rank(reviewer_page)
       review.put()
@@ -80,8 +79,7 @@ class Product(ndb.Model):
     text_parser = parser.Parser(reviews, self.description)
     total = 0.0
     for review in reviews:
-      review.set_dynamic_criteria(text_parser, self.oldest_timestamp,
-                                  self.newest_timestamp)
+      review.set_dynamic_criteria(text_parser, self.oldest, self.newest)
       total += review.rating
     self.average_rating = total / len(reviews)
     self.put()
