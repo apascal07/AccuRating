@@ -84,7 +84,7 @@ class PageFetcher:
 
   @common.timer
   def fetch_profiles(self, urls):
-    """Uses loads all the reviews on the profile page and returns the final page html"""
+    """Loads all the reviews on the profile page and returns all page html"""
 
     pattern = '(<div data-glimpse_path.*?>)'
     pages = []
