@@ -6,3 +6,4 @@ lib/amazon-product-api.conf
 lib/.amazon-product-api
 lib/amazon-product-api
 test_files
+db.sqlite3
