@@ -6,29 +6,31 @@ import math
 import parser
 import pprint
 import scraper
-from google.appengine.ext import ndb
+
+from django.db import models
 
 
 PRODUCT_REVIEWS_URL = 'http://amazon.com/product-reviews/{asin}'
 
 
-class Product(ndb.Model):
+class Product(models.Model):
   """A Product object contains meta data and references to its reviews."""
 
   # Data retrieved from scraping the Amazon pages.
-  title = ndb.StringProperty(indexed=True, required=True)
-  product_url = ndb.StringProperty(indexed=False, required=True)
-  description = ndb.TextProperty(indexed=False)
-  reviews = ndb.KeyProperty(indexed=False, kind='Review', repeated=True)
-  retrieval_timestamp = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
-  newest_timestamp = ndb.DateTimeProperty(indexed=False)
-  oldest_timestamp = ndb.DateTimeProperty(indexed=False)
-  amazon_rating = ndb.FloatProperty(indexed=False)
+  title = models.CharField(max_length=300)
+  product_url = models.URLField()
+  description = models.TextField()
+  reviews = models.ManyToManyField('Review')
+  reviews = models.KeyProperty(indexed=False, kind='Review', repeated=True)
+  retrieval_timestamp = models.DateTimeProperty(indexed=False, auto_now_add=True)
+  newest_timestamp = models.DateTimeProperty(indexed=False)
+  oldest_timestamp = models.DateTimeProperty(indexed=False)
+  amazon_rating = models.FloatProperty(indexed=False)
 
   # Data computed by the system.
-  average_rating = ndb.FloatProperty(indexed=False)
-  weighted_rating = ndb.FloatProperty(indexed=False)
-  training_set = ndb.KeyProperty(indexed=False, kind='TrainingSet')
+  average_rating = models.FloatProperty(indexed=False)
+  weighted_rating = models.FloatProperty(indexed=False)
+  training_set = models.KeyProperty(indexed=False, kind='TrainingSet')
 
   @classmethod
   @common.timer
@@ -53,23 +55,24 @@ class Product(ndb.Model):
     review_page_urls = []
     for review_list_page in review_list_pages:
       review_page_urls.extend(scraper.get_review_url_list(review_list_page))
-    review_pages = page_fetcher.fetch_pages(review_page_urls)
-    # Create Review objects, update oldest/newest review date, and save.
-    product.oldest = datetime.datetime.now()
-    product.newest = datetime.datetime(1970, 1, 1)
-    for review_page in review_pages:
-      review = scraper.get_review(review_page)
-      product.oldest = min(product.oldest, review.timestamp)
-      product.newest = max(product.newest, review.timestamp)
-      reviewer_page = page_fetcher.fetch_pages([review.reviewer_url])[0]
-      review.reviewer_rank = scraper.get_rank(reviewer_page)
-      review.put()
-      product.reviews.append(review.key)
-    # Process the Product to compute all dynamic criteria values.
-    product.set_dynamic_criteria()
-    # Set the weighted rating if a TrainingSet is available.
-    product.set_weighted_rating()
-    product.put()
+    logging.info(review_page_urls)
+    # review_pages = slow_fetcher.fetch_pages(review_page_urls)
+    # # Create Review objects, update oldest/newest review date, and save.
+    # product.oldest = datetime.datetime.now()
+    # product.newest = datetime.datetime(1970, 1, 1)
+    # for review_page in review_pages:
+    #   review = scraper.get_review(review_page)
+    #   product.oldest = min(product.oldest, review.timestamp)
+    #   product.newest = max(product.newest, review.timestamp)
+    #   reviewer_page = slow_fetcher.fetch_pages([review.reviewer_url])[0]
+    #   review.reviewer_rank = scraper.get_rank(reviewer_page)
+    #   review.put()
+    #   product.reviews.append(review.key)
+    # # Process the Product to compute all dynamic criteria values.
+    # product.set_dynamic_criteria()
+    # # Set the weighted rating if a TrainingSet is available.
+    # product.set_weighted_rating()
+    # product.put()
     return product
 
   @common.timer
@@ -116,28 +119,28 @@ class Product(ndb.Model):
     return weighted_rating
 
 
-class Review(ndb.Model):
+class Review(models.Model):
   """A Review object contains a single review for a single product."""
 
   # Data retrieved from scraping the Amazon pages.
-  rating = ndb.FloatProperty(indexed=False, required=True)
-  text = ndb.TextProperty(indexed=False, required=True)
-  upvote_count = ndb.IntegerProperty(indexed=False, default=0)
-  downvote_count = ndb.IntegerProperty(indexed=False, default=0)
-  timestamp = ndb.DateTimeProperty(indexed=False, required=True)
-  reviewer_url = ndb.StringProperty(indexed=False, required=True)
-  reviewer_name = ndb.StringProperty(indexed=False, required=False)  # FIX!
-  reviewer_rank = ndb.IntegerProperty(indexed=False, default=0)
+  rating = models.FloatProperty(indexed=False, required=True)
+  text = models.TextProperty(indexed=False, required=True)
+  upvote_count = models.IntegerProperty(indexed=False, default=0)
+  downvote_count = models.IntegerProperty(indexed=False, default=0)
+  timestamp = models.DateTimeProperty(indexed=False, required=True)
+  reviewer_url = models.CharField(indexed=False, required=True)
+  reviewer_name = models.CharField(indexed=False, required=False)  # FIX!
+  reviewer_rank = models.IntegerProperty(indexed=False, default=0)
 
   # Available dynamic criteria generated by the system.
-  verified = ndb.FloatProperty(indexed=False, default=0)
-  review_age = ndb.FloatProperty(indexed=False, default=0)
-  vote_confidence = ndb.FloatProperty(indexed=False, default=0)
-  text_quality = ndb.FloatProperty(indexed=False, default=0)
-  relative_rank = ndb.FloatProperty(indexed=False, default=0)
+  verified = models.FloatProperty(indexed=False, default=0)
+  review_age = models.FloatProperty(indexed=False, default=0)
+  vote_confidence = models.FloatProperty(indexed=False, default=0)
+  text_quality = models.FloatProperty(indexed=False, default=0)
+  relative_rank = models.FloatProperty(indexed=False, default=0)
 
   # Data generated by the system.
-  weight = ndb.FloatProperty(indexed=True, default=0)
+  weight = models.FloatProperty(indexed=True, default=0)
 
   @common.timer
   def set_dynamic_criteria(self, text_parser, oldest, newest):
@@ -182,13 +185,13 @@ class Review(ndb.Model):
                    (math.pi / 2), 0), 1) if rank > 0 else 0
 
 
-class TrainingSet(ndb.Model):
+class TrainingSet(models.Model):
   """A TrainingSet object contains meta data about a training attempt."""
-  start_timestamp = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
-  end_timestamp = ndb.DateTimeProperty(indexed=True)
-  criteria_weights = ndb.PickleProperty(indexed=False)
-  review_count_limit = ndb.IntegerProperty(indexed=False)
-  product_sample = ndb.KeyProperty(indexed=True, kind='Product')
+  start_timestamp = models.DateTimeProperty(indexed=False, auto_now_add=True)
+  end_timestamp = models.DateTimeProperty(indexed=True)
+  criteria_weights = models.PickleProperty(indexed=False)
+  review_count_limit = models.IntegerProperty(indexed=False)
+  product_sample = models.KeyProperty(indexed=True, kind='Product')
 
   @classmethod
   def get_latest_set(self):
