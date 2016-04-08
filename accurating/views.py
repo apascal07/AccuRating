@@ -1,6 +1,10 @@
-from django.http import HttpResponse
-from django.template import loader
+from django import http, shortcuts
 
 
 def dashboard(request):
     return HttpResponse(template=loader.get_template('/templates/dashboard.html'))
+
+
+def search(request, **kwargs):
+  context = {}
+  return shortcuts.render(request, 'search.html', context)
