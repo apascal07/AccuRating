@@ -1,6 +1,7 @@
 import common
 import datetime
 import fetcher
+import json
 import logging
 import math
 import parser
@@ -21,16 +22,15 @@ class Product(models.Model):
   product_url = models.URLField()
   description = models.TextField()
   reviews = models.ManyToManyField('Review')
-  reviews = models.KeyProperty(indexed=False, kind='Review', repeated=True)
-  retrieval_timestamp = models.DateTimeProperty(indexed=False, auto_now_add=True)
-  newest_timestamp = models.DateTimeProperty(indexed=False)
-  oldest_timestamp = models.DateTimeProperty(indexed=False)
-  amazon_rating = models.FloatProperty(indexed=False)
+  retrieved = models.DateTimeField(auto_now_add=True)
+  newest = models.DateTimeField()
+  oldest = models.DateTimeField()
+  amazon_rating = models.FloatField()
 
   # Data computed by the system.
-  average_rating = models.FloatProperty(indexed=False)
-  weighted_rating = models.FloatProperty(indexed=False)
-  training_set = models.KeyProperty(indexed=False, kind='TrainingSet')
+  average_rating = models.FloatField()
+  weighted_rating = models.FloatField()
+  training_set = models.ForeignKeyField('TrainingSet', models.SET_NULL)
 
   @classmethod
   @common.timer
@@ -55,24 +55,23 @@ class Product(models.Model):
     review_page_urls = []
     for review_list_page in review_list_pages:
       review_page_urls.extend(scraper.get_review_url_list(review_list_page))
-    logging.info(review_page_urls)
-    # review_pages = slow_fetcher.fetch_pages(review_page_urls)
-    # # Create Review objects, update oldest/newest review date, and save.
-    # product.oldest = datetime.datetime.now()
-    # product.newest = datetime.datetime(1970, 1, 1)
-    # for review_page in review_pages:
-    #   review = scraper.get_review(review_page)
-    #   product.oldest = min(product.oldest, review.timestamp)
-    #   product.newest = max(product.newest, review.timestamp)
-    #   reviewer_page = slow_fetcher.fetch_pages([review.reviewer_url])[0]
-    #   review.reviewer_rank = scraper.get_rank(reviewer_page)
-    #   review.put()
-    #   product.reviews.append(review.key)
-    # # Process the Product to compute all dynamic criteria values.
-    # product.set_dynamic_criteria()
-    # # Set the weighted rating if a TrainingSet is available.
-    # product.set_weighted_rating()
-    # product.put()
+    review_pages = page_fetcher.fetch_pages(review_page_urls)
+    # Create Review objects, update oldest/newest review date, and save.
+    product.oldest = datetime.datetime.now()
+    product.newest = datetime.datetime(1970, 1, 1)
+    for review_page in review_pages:
+      review = scraper.get_review(review_page)
+      product.oldest = min(product.oldest, review.timestamp)
+      product.newest = max(product.newest, review.timestamp)
+      reviewer_page = page_fetcher.fetch_pages([review.reviewer_url])[0]
+      review.reviewer_rank = scraper.get_rank(reviewer_page)
+      review.save()
+      product.reviews.append(review.key)
+    # Process the Product to compute all dynamic criteria values.
+    product.set_dynamic_criteria()
+    # Set the weighted rating if a TrainingSet is available.
+    product.set_weighted_rating()
+    product.save()
     return product
 
   @common.timer
@@ -85,7 +84,7 @@ class Product(models.Model):
       review.set_dynamic_criteria(text_parser, self.oldest, self.newest)
       total += review.rating
     self.average_rating = total / len(reviews)
-    self.put()
+    self.save()
 
   def set_weighted_rating(self, training_set=None):
     """Computes and sets the weighted rating if it was successful."""
@@ -93,8 +92,8 @@ class Product(models.Model):
     if weighted_rating:
       self.weighted_rating = weighted_rating
       self.training_set = training_set
-      self.training_set.put()
-      self.put()
+      self.training_set.save()
+      self.save()
       return True
     return False
 
@@ -103,7 +102,7 @@ class Product(models.Model):
     # Fetch the associated Review objects and latest TrainingSet object.
     reviews = reviews or Review.get_all_by_ids(self.reviews)
     training_set = (training_set or self.training_set or
-                    TrainingSet.get_latest_set())
+                    TrainingSet.objects.latest())
     # Unable to get a weighted rating if there are no weights.
     if not training_set:
       return None
@@ -123,24 +122,24 @@ class Review(models.Model):
   """A Review object contains a single review for a single product."""
 
   # Data retrieved from scraping the Amazon pages.
-  rating = models.FloatProperty(indexed=False, required=True)
-  text = models.TextProperty(indexed=False, required=True)
-  upvote_count = models.IntegerProperty(indexed=False, default=0)
-  downvote_count = models.IntegerProperty(indexed=False, default=0)
-  timestamp = models.DateTimeProperty(indexed=False, required=True)
-  reviewer_url = models.CharField(indexed=False, required=True)
-  reviewer_name = models.CharField(indexed=False, required=False)  # FIX!
-  reviewer_rank = models.IntegerProperty(indexed=False, default=0)
+  rating = models.FloatField()
+  text = models.TextField()
+  upvote_count = models.IntegerField(default=0)
+  downvote_count = models.IntegerField(default=0)
+  timestamp = models.DateTimeField()
+  reviewer_url = models.URLField()
+  reviewer_name = models.CharField(max_length=128)
+  reviewer_rank = models.IntegerField()
 
   # Available dynamic criteria generated by the system.
-  verified = models.FloatProperty(indexed=False, default=0)
-  review_age = models.FloatProperty(indexed=False, default=0)
-  vote_confidence = models.FloatProperty(indexed=False, default=0)
-  text_quality = models.FloatProperty(indexed=False, default=0)
-  relative_rank = models.FloatProperty(indexed=False, default=0)
+  verified = models.FloatField(default=0.0)
+  review_age = models.FloatField(default=0.0)
+  vote_confidence = models.FloatField(default=0.0)
+  text_quality = models.FloatField(default=0.0)
+  relative_rank = models.FloatField(default=0.0)
 
   # Data generated by the system.
-  weight = models.FloatProperty(indexed=True, default=0)
+  weight = models.FloatField(default=0.0)
 
   @common.timer
   def set_dynamic_criteria(self, text_parser, oldest, newest):
@@ -150,12 +149,12 @@ class Review(models.Model):
     self.text_quality = text_parser.get_text_quality(self.text)
     self.review_age = self.get_review_age(oldest, newest, self.timestamp)
     self.relative_rank = self.get_relative_rank(self.reviewer_rank)
-    self.put()
+    self.save()
 
   @classmethod
   def get_all_by_ids(self, ids):
     """Retrives all of the Review objects for the list of ids."""
-    return self.query().filter(Review.key.IN(ids)).fetch()
+    return self.objects.filter(id__in=ids)
 
   @staticmethod
   def get_vote_confidence(upvotes, downvotes):
@@ -187,12 +186,15 @@ class Review(models.Model):
 
 class TrainingSet(models.Model):
   """A TrainingSet object contains meta data about a training attempt."""
-  start_timestamp = models.DateTimeProperty(indexed=False, auto_now_add=True)
-  end_timestamp = models.DateTimeProperty(indexed=True)
-  criteria_weights = models.PickleProperty(indexed=False)
-  review_count_limit = models.IntegerProperty(indexed=False)
-  product_sample = models.KeyProperty(indexed=True, kind='Product')
+  start_timestamp = models.DateTimeField(auto_now_add=True)
+  end_timestamp = models.DateTimeField()
+  _criteria_weights = models.TextField()
+  training_product = models.ForeignKeyField('Product', models.CASCADE)
 
-  @classmethod
-  def get_latest_set(self):
-    return self.query().order(-TrainingSet.end_timestamp).get()
+  @property
+  def criteria_weights(self):
+    return json.loads(self._criteria_weights)
+
+  @criteria_weights.setter
+  def criteria_weights(self, criteria_weights):
+    self._criteria_weights = json.dumps(criteria_weights)
