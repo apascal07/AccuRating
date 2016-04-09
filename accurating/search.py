@@ -5,7 +5,7 @@ import models
 def get_product(asin):
   """Retrieves a Product object for the given ASIN."""
   logging.info('Retrieving product #{} from datastore...'.format(asin))
-  product = None  # models.Product.get_by_asin(asin)
+  product = models.Product.get_by_asin(asin)
   # TODO: invalidate a product after a certain time delta (24-48 hours)
   if not product:
     logging.info('Product #{} not in datastore. Creating...'.format(asin))

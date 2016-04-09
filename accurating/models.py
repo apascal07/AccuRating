@@ -4,6 +4,7 @@ import fetcher
 import json
 import math
 import parser
+import pprint
 import scraper
 
 from django.db import models
@@ -50,14 +51,16 @@ class Product(models.Model):
     # Compile a list of review list page URLs and fetch all review list pages.
     review_list_pages = [first_page]
     if page_count > 1:
-      review_list_urls = [common.update_url(reviews_url, {'page': page})
+      review_list_urls = [common.update_url(reviews_url, {'pageNumber': page})
                           for page in range(2, page_count + 1)]
+      print review_list_urls
       review_list_pages.extend(page_fetcher.fetch_pages(review_list_urls))
     # Compile a list of all of the review page URLs and fetch all review pages.
     review_page_urls = []
     for review_list_page in review_list_pages:
       review_page_urls.extend(scraper.get_review_url_list(review_list_page))
     print 'Fetching {} review pages...'.format(len(review_page_urls))
+    pprint.pprint(review_page_urls)
     review_pages = page_fetcher.fetch_pages(review_page_urls)
     # Create Review objects, update oldest/newest review date, and save.
     product.oldest = datetime.datetime.now()
