@@ -3,7 +3,6 @@ import models
 import bs4
 import datetime
 import re
-import pytz
 
 num_format = '(\d+(?:\,\d{3})*)'
 

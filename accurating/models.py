@@ -4,7 +4,6 @@ import fetcher
 import json
 import math
 import parser
-import pytz
 import scraper
 
 from django.db import models
