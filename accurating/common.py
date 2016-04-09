@@ -17,7 +17,7 @@ def update_url(url, parameters, append=True):
     old_parameters = dict(urlparse.parse_qsl(parsed_url.query))
     parameters.update(old_parameters)
   # encode the parameter query string and recreate the full URL again
-  query = urllib.urlencode(old_parameters)
+  query = urllib.urlencode(parameters)
   base_url = url.split('?')[0]
   new_url = '{}?{}'.format(base_url, query)
   return new_url
