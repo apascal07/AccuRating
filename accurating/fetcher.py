@@ -2,6 +2,7 @@ import abstract
 import amazonproduct
 import bs4
 import common
+import logging
 import os
 from amazonproduct import processors, errors
 from selenium import webdriver
@@ -39,10 +40,24 @@ class PageFetcher(abstract.AbstractPageFetcher):
     return str(response)
 
   @common.timer
-  def fetch_pages(self, urls):
+  def fetch_pages(self, urls, max_retries=10):
     """Retrieves the responses for each of the URLs passed in."""
     pages = []
     for url in urls:
-      self.driver.get(url)
+      fetch_attempts = 1
+
+      # Attempt to fetch the page. Retry if failed
+      while True:
+        try:
+          self.driver.get(url)
+          break
+        except Exception as ee:
+          if fetch_attempts < max_retries:
+            logging.warn("Failed to fetch url='{}'. Retrying".format(url))
+          else:
+            logging.error("Failed to fetch url='{}': {}".format(url, ee))
+            raise
+
+      # Handle the page html
       pages.append(self.driver.page_source)
     return pages
