@@ -2,10 +2,9 @@ import common
 import datetime
 import fetcher
 import json
-import logging
 import math
 import parser
-import pprint
+import pytz
 import scraper
 
 from django.db import models
@@ -18,6 +17,7 @@ class Product(models.Model):
   """A Product object contains meta data and references to its reviews."""
 
   # Data retrieved from scraping the Amazon pages.
+  asin = models.CharField(max_length=32)
   title = models.CharField(max_length=300)
   product_url = models.URLField()
   description = models.TextField()
@@ -28,9 +28,9 @@ class Product(models.Model):
   amazon_rating = models.FloatField()
 
   # Data computed by the system.
-  average_rating = models.FloatField()
-  weighted_rating = models.FloatField()
-  training_set = models.ForeignKeyField('TrainingSet', models.SET_NULL)
+  average_rating = models.FloatField(null=True, blank=True, default=None)
+  weighted_rating = models.FloatField(null=True, blank=True, default=None)
+  training_set = models.ForeignKey('TrainingSet', models.SET_NULL, null=True)
 
   @classmethod
   @common.timer
@@ -38,12 +38,15 @@ class Product(models.Model):
     """Creates a Product object for the given ASIN by fetching remote data."""
     page_fetcher = fetcher.PageFetcher()
     # Fetch product metadata from the Amazon API and create a Product object.
+    print 'Fetching product #{} from Amazon API...'.format(asin)
     product_meta = page_fetcher.fetch_product(asin)
     product = scraper.get_product(product_meta)
     # Fetch the first review list page and extract the page count and rating.
     reviews_url = PRODUCT_REVIEWS_URL.format(asin=asin)
+    print 'Fetching first page of reviews...'
     first_page = page_fetcher.fetch_pages([reviews_url])[0]
     page_count = scraper.get_page_count(first_page) or 1
+    print 'Found {} pages of reviews...'.format(page_count)
     product.amazon_rating = scraper.get_amazon_rating(first_page)
     # Compile a list of review list page URLs and fetch all review list pages.
     review_list_pages = [first_page]
@@ -55,18 +58,21 @@ class Product(models.Model):
     review_page_urls = []
     for review_list_page in review_list_pages:
       review_page_urls.extend(scraper.get_review_url_list(review_list_page))
+    print 'Fetching {} review pages...'.format(len(review_page_urls))
     review_pages = page_fetcher.fetch_pages(review_page_urls)
     # Create Review objects, update oldest/newest review date, and save.
     product.oldest = datetime.datetime.now()
     product.newest = datetime.datetime(1970, 1, 1)
-    for review_page in review_pages:
+    product.save()
+    for i, review_page in enumerate(review_pages):
+      print 'Scraping review #{} and fetching profile...'.format(i)
       review = scraper.get_review(review_page)
       product.oldest = min(product.oldest, review.timestamp)
       product.newest = max(product.newest, review.timestamp)
       reviewer_page = page_fetcher.fetch_pages([review.reviewer_url])[0]
       review.reviewer_rank = scraper.get_rank(reviewer_page)
       review.save()
-      product.reviews.append(review.key)
+      product.reviews.add(review)
     # Process the Product to compute all dynamic criteria values.
     product.set_dynamic_criteria()
     # Set the weighted rating if a TrainingSet is available.
@@ -74,11 +80,20 @@ class Product(models.Model):
     product.save()
     return product
 
+  @classmethod
+  def get_by_asin(self, asin):
+    """Retrieves a Product by its ASIN or returns None if doesn't exist."""
+    try:
+      product = self.objects.get(asin=asin)
+    except self.DoesNotExist:
+      product = None
+    return product
+
   @common.timer
   def set_dynamic_criteria(self):
     """Generates and sets all dynamic criteria values."""
-    reviews = Review.get_all_by_ids(self.reviews)
-    text_parser = parser.Parser(reviews, self.description)
+    reviews = self.reviews.all()
+    text_parser = parser.TextParser(reviews, self.description)
     total = 0.0
     for review in reviews:
       review.set_dynamic_criteria(text_parser, self.oldest, self.newest)
@@ -100,9 +115,12 @@ class Product(models.Model):
   def get_weighted_rating(self, reviews=None, training_set=None):
     """Computes a weighted rating based on review criteria and weights."""
     # Fetch the associated Review objects and latest TrainingSet object.
-    reviews = reviews or Review.get_all_by_ids(self.reviews)
-    training_set = (training_set or self.training_set or
-                    TrainingSet.objects.latest())
+    reviews = reviews or self.reviews.all()
+    try:
+      training_set = (training_set or self.training_set or
+                      TrainingSet.objects.latest())
+    except TrainingSet.DoesNotExist:
+      training_set = None
     # Unable to get a weighted rating if there are no weights.
     if not training_set:
       return None
@@ -128,8 +146,8 @@ class Review(models.Model):
   downvote_count = models.IntegerField(default=0)
   timestamp = models.DateTimeField()
   reviewer_url = models.URLField()
-  reviewer_name = models.CharField(max_length=128)
-  reviewer_rank = models.IntegerField()
+  reviewer_name = models.CharField(max_length=64)
+  reviewer_rank = models.IntegerField(default=0)
 
   # Available dynamic criteria generated by the system.
   verified = models.FloatField(default=0.0)
@@ -188,8 +206,8 @@ class TrainingSet(models.Model):
   """A TrainingSet object contains meta data about a training attempt."""
   start_timestamp = models.DateTimeField(auto_now_add=True)
   end_timestamp = models.DateTimeField()
-  _criteria_weights = models.TextField()
-  training_product = models.ForeignKeyField('Product', models.CASCADE)
+  _criteria_weights = models.TextField(null=True)
+  training_product = models.ForeignKey('Product', models.CASCADE)
 
   @property
   def criteria_weights(self):
@@ -198,3 +216,6 @@ class TrainingSet(models.Model):
   @criteria_weights.setter
   def criteria_weights(self, criteria_weights):
     self._criteria_weights = json.dumps(criteria_weights)
+
+  class Meta:
+    get_latest_by = 'end_timestamp'

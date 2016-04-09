@@ -1,10 +1,11 @@
-from django import http, shortcuts
+import logging
+import pprint
+import search
+from django import shortcuts
 
 
-def dashboard(request):
-    return HttpResponse(template=loader.get_template('/templates/dashboard.html'))
-
-
-def search(request, **kwargs):
+def search_handler(request, **kwargs):
+  product = search.get_product(kwargs['asin'])
+  logging.info(pprint.pprint(product))
   context = {}
   return shortcuts.render(request, 'search.html', context)

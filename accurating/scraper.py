@@ -3,6 +3,7 @@ import models
 import bs4
 import datetime
 import re
+import pytz
 
 num_format = '(\d+(?:\,\d{3})*)'
 
@@ -131,10 +132,7 @@ def get_rank(html):
   """
   dom = bs4.BeautifulSoup(html, 'html.parser')
   bio = _select(dom, '.bio-expander', important=False)
-  if bio:
-    return int(_find(bio, text=re.compile('#' + num_format))[1:].replace(',', ''))
-  else:
-    return None
+  return int(_find(bio, text=re.compile('#' + num_format))[1:].replace(',', '')) if bio else 0
 
 
 def get_product(xml):
@@ -145,12 +143,11 @@ def get_product(xml):
   """
   dom = bs4.BeautifulSoup(xml, 'html.parser')
   xml = _select(dom, 'itemlookupresponse > items > item')
-  product = models.Product(id=_select(xml, 'asin').text)
-
+  product = models.Product()
+  product.asin = _select(xml, 'asin').text
   product.title = _select(xml, 'itemattributes > title').string
   product.product_url = _select(xml, 'detailpageurl').string
   product.reviews_url = _select(xml, 'customerreviews > iframeurl').string
-  product.retrieval_date = datetime.datetime.today()
   product.category = _select(xml, 'itemattributes > productgroup').string
 
   # concatenate all description data
