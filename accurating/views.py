@@ -9,3 +9,8 @@ def search_handler(request, **kwargs):
   logging.info(pprint.pprint(product))
   context = {}
   return shortcuts.render(request, 'search.html', context)
+
+
+def dashboard(request, **kwargs):
+  context = {}
+  return shortcuts.render(request, 'dashboard.html', context)
