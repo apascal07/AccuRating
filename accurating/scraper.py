@@ -131,7 +131,9 @@ def get_rank(html):
   """
   dom = bs4.BeautifulSoup(html, 'html.parser')
   bio = _select(dom, '.bio-expander', important=False)
-  return int(_find(bio, text=re.compile('#' + num_format))[1:].replace(',', '')) if bio else 0
+  rank = (_find(bio, text=re.compile('#' + num_format), important=False) if bio
+          else None)
+  return int(rank[1:].replace(',', '')) if rank else 0
 
 
 def get_product(xml):
