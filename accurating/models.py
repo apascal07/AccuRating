@@ -165,7 +165,7 @@ class Review(models.Model):
   upvote_count = models.IntegerField(default=0)
   downvote_count = models.IntegerField(default=0)
   timestamp = models.DateTimeField()
-  reviewer_url = models.URLField()
+  reviewer_url = models.URLField(null=True, blank=True)
   reviewer_name = models.CharField(max_length=64)
   reviewer_rank = models.IntegerField(default=0)
 
@@ -214,7 +214,8 @@ class Review(models.Model):
       try:
         review = scraper.get_review(review_page)
         break
-      except Exception:
+      except Exception as e:
+        print e
         print 'Attempt {} to parse review URL {} failed.'.format(
             retries, review_page_url)
     reviewer_page = page_fetcher.fetch_page(review.reviewer_url)
