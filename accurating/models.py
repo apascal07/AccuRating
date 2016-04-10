@@ -5,12 +5,15 @@ import json
 import math
 import parser
 import pprint
+import re
 import scraper
 
 from django.db import models
 
 
-PRODUCT_REVIEWS_URL = 'http://amazon.com/product-reviews/{asin}'
+REVIEW_LIST_URL = 'http://amazon.com/product-reviews/{asin}/'
+REVIEW_PAGE_URL = 'http://amazon.com/review/{uid}/'
+MAX_RETRIES = 10
 
 
 class Product(models.Model):
@@ -23,8 +26,8 @@ class Product(models.Model):
   description = models.TextField()
   reviews = models.ManyToManyField('Review')
   retrieved = models.DateTimeField(auto_now_add=True)
-  newest = models.DateTimeField()
-  oldest = models.DateTimeField()
+  newest = models.DateTimeField(null=True, blank=True, default=None)
+  oldest = models.DateTimeField(null=True, blank=True, default=None)
   amazon_rating = models.FloatField()
 
   # Data computed by the system.
@@ -34,61 +37,75 @@ class Product(models.Model):
 
   @classmethod
   @common.timer
-  def create_product(self, asin, force=False):
-    """Creates a Product object for the given ASIN by fetching remote data."""
+  def get_or_create_product(self, asin):
+    """Retrieves the product, if it exists, else creates from remote data."""
+    product = self.get_product(asin)
+    if not product:
+      print 'Beginning fetching process for product #{}...'.format(asin)
+      product = self.create_product(asin)
+    return product
+
+  @classmethod
+  @common.timer
+  def get_product(self, asin):
+    """Retrieves the product from the database."""
+    product = None
+    try:
+      product = self.objects.get(asin=asin)
+    except self.DoesNotExist:
+      print 'Product #{} does not exist in the database.'.format(asin)
+    return product
+
+  @classmethod
+  @common.timer
+  def create_product(self, asin):
+    """Creates a product for the given ASIN by fetching remote data."""
     page_fetcher = fetcher.PageFetcher()
+
     # Fetch product metadata from the Amazon API and create a Product object.
     print 'Fetching product #{} from Amazon API...'.format(asin)
     product_meta = page_fetcher.fetch_product(asin)
     product = scraper.get_product(product_meta)
+
     # Fetch the first review list page and extract the page count and rating.
-    reviews_url = PRODUCT_REVIEWS_URL.format(asin=asin)
+    reviews_url = REVIEW_LIST_URL.format(asin=asin)
     print 'Fetching first page of reviews...'
-    first_page = page_fetcher.fetch_pages([reviews_url])[0]
+    first_page = page_fetcher.fetch_page(reviews_url)
     page_count = scraper.get_page_count(first_page) or 1
     print 'Found {} pages of reviews...'.format(page_count)
     product.amazon_rating = scraper.get_amazon_rating(first_page)
+
     # Compile a list of review list page URLs and fetch all review list pages.
     review_list_pages = [first_page]
-    if page_count > 1:
-      review_list_urls = [common.update_url(reviews_url, {'pageNumber': page})
-                          for page in range(2, page_count + 1)]
-      print review_list_urls
-      review_list_pages.extend(page_fetcher.fetch_pages(review_list_urls))
-    # Compile a list of all of the review page URLs and fetch all review pages.
-    review_page_urls = []
-    for review_list_page in review_list_pages:
-      review_page_urls.extend(scraper.get_review_url_list(review_list_page))
-    print 'Fetching {} review pages...'.format(len(review_page_urls))
-    pprint.pprint(review_page_urls)
-    review_pages = page_fetcher.fetch_pages(review_page_urls)
-    # Create Review objects, update oldest/newest review date, and save.
+    for i in range(2, page_count + 1):
+      paginated_url = common.update_url(reviews_url, {'pageNumber': i})
+      print 'Fetching page {} of reviews...'.format(i)
+      review_list_page = page_fetcher.fetch_page(paginated_url)
+      review_list_pages.append(review_list_page)
+
+    # Fetch each review and its associated reviewer and populate the database.
+    reviews = []
     product.oldest = datetime.datetime.now()
     product.newest = datetime.datetime(1970, 1, 1)
+    for i, review_list_page in enumerate(review_list_pages):
+      print 'Scraping page {} of reviews...'.format(i + 1)
+      review_page_urls = scraper.get_review_url_list(review_list_page)
+      for review_page_url in review_page_urls:
+        review_uid = Review.get_uid_from_url(review_page_url)
+        review = Review.get_or_create_review(review_uid, page_fetcher)
+        product.oldest = min(product.oldest, review.timestamp)
+        product.newest = max(product.newest, review.timestamp)
+        reviews.append(review)
+
+    # Save the product to init the object and add the now-successful reviews.
     product.save()
-    for i, review_page in enumerate(review_pages):
-      print 'Scraping review #{} and fetching profile...'.format(i)
-      review = scraper.get_review(review_page)
-      product.oldest = min(product.oldest, review.timestamp)
-      product.newest = max(product.newest, review.timestamp)
-      reviewer_page = page_fetcher.fetch_pages([review.reviewer_url])[0]
-      review.reviewer_rank = scraper.get_rank(reviewer_page)
-      review.save()
-      product.reviews.add(review)
-    # Process the Product to compute all dynamic criteria values.
+    product.reviews.add(*reviews)
+
+    # Process the product's dynamic criteria and possibly weighted rating.
     product.set_dynamic_criteria()
-    # Set the weighted rating if a TrainingSet is available.
     product.set_weighted_rating()
     product.save()
-    return product
 
-  @classmethod
-  def get_by_asin(self, asin):
-    """Retrieves a Product by its ASIN or returns None if doesn't exist."""
-    try:
-      product = self.objects.get(asin=asin)
-    except self.DoesNotExist:
-      product = None
     return product
 
   @common.timer
@@ -142,6 +159,7 @@ class Review(models.Model):
   """A Review object contains a single review for a single product."""
 
   # Data retrieved from scraping the Amazon pages.
+  uid = models.CharField(max_length=16)
   rating = models.FloatField()
   text = models.TextField()
   upvote_count = models.IntegerField(default=0)
@@ -160,6 +178,50 @@ class Review(models.Model):
 
   # Data generated by the system.
   weight = models.FloatField(default=0.0)
+
+  @classmethod
+  @common.timer
+  def get_or_create_review(self, uid, page_fetcher=None):
+    """Retrieves the review, if it exists, else creates from remote data."""
+    review = self.get_review(uid)
+    if not review:
+      print 'Beginning fetching process for review #{}...'.format(uid)
+      review = self.create_review(uid, page_fetcher)
+    return review
+
+  @classmethod
+  @common.timer
+  def get_review(self, uid):
+    """Retrieves the review from the database."""
+    review = None
+    try:
+      review = self.objects.get(uid=uid)
+      print 'Retrieved review #{} from the database.'.format(uid)
+    except self.DoesNotExist:
+      print 'Review #{} does not exist in the database.'.format(uid)
+    return review
+
+  @classmethod
+  @common.timer
+  def create_review(self, uid, page_fetcher=None):
+    """Creates a review for the given UID by fetching remote data."""
+    page_fetcher = page_fetcher or fetcher.PageFetcher()
+    review_page_url = REVIEW_PAGE_URL.format(uid=uid)
+    review_page = page_fetcher.fetch_page(review_page_url)
+    retries = 0
+    for _ in range(MAX_RETRIES):
+      retries += 1
+      try:
+        review = scraper.get_review(review_page)
+        break
+      except Exception:
+        print 'Attempt {} to parse review URL {} failed.'.format(
+            retries, review_page_url)
+    reviewer_page = page_fetcher.fetch_page(review.reviewer_url)
+    review.reviewer_rank = scraper.get_rank(reviewer_page)
+    review.save()
+    print 'Review #{} has been fetched, created, and saved.'.format(uid)
+    return review
 
   @common.timer
   def set_dynamic_criteria(self, text_parser, oldest, newest):
@@ -202,6 +264,12 @@ class Review(models.Model):
     """Calculates the relative rank based on an integer rank from 1-1000000."""
     return min(max(0.5 + 0.7 * math.atan(float(-rank) / 250000 + 2) /
                    (math.pi / 2), 0), 1) if rank > 0 else 0
+
+  @staticmethod
+  def get_uid_from_url(url):
+    """Extracts the review UID from a given URL."""
+    match = re.search(r'review[s]?\/([a-zA-Z0-9]*)\/?', url)
+    return match.group(1) if match else None
 
 
 class TrainingSet(models.Model):

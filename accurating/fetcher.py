@@ -40,24 +40,23 @@ class PageFetcher(abstract.AbstractPageFetcher):
     return str(response)
 
   @common.timer
+  def fetch_page(self, url, max_retries=10):
+    """Retrieves the responses for the given URL."""
+    page_source = None
+    for _ in range(max_retries):
+      try:
+        self.driver.get(url)
+        page_source = self.driver.page_source
+        break
+      except Exception:
+        logging.warn('Failed to fetch URL {}. Retrying...'.format(url))
+    if not page_source:
+      self.driver.close()
+      raise Exception('Failed to fetch URL {} after {} attempts.'.format(
+          url, max_retries))
+    return page_source
+
+  @common.timer
   def fetch_pages(self, urls, max_retries=10):
-    """Retrieves the responses for each of the URLs passed in."""
-    pages = []
-    for url in urls:
-      fetch_attempts = 1
-
-      # Attempt to fetch the page. Retry if failed
-      while True:
-        try:
-          self.driver.get(url)
-          break
-        except Exception as ee:
-          if fetch_attempts < max_retries:
-            logging.warn("Failed to fetch url='{}'. Retrying".format(url))
-          else:
-            logging.error("Failed to fetch url='{}': {}".format(url, ee))
-            raise
-
-      # Handle the page html
-      pages.append(self.driver.page_source)
-    return pages
+    """Retrieves the responses for the given URLs."""
+    return [self.fetch_page(url, max_retries) for url in urls]

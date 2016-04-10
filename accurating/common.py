@@ -1,5 +1,6 @@
 import logging
 import math
+import re
 import time
 import urllib
 import urlparse

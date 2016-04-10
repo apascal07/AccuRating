@@ -1,12 +1,11 @@
-import logging
+import models
 import pprint
-import search
-import json
 from django import http, shortcuts
 
 
 def search_handler(request, **kwargs):
-  product = search.get_product(kwargs['asin'])
+  asin = kwargs['asin']
+  product = models.Product.get_or_create_product(asin)
   response = http.HttpResponse()
   response.status_code = 200
   response.content_type = 'application/json'
