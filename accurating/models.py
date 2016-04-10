@@ -106,6 +106,9 @@ class Product(models.Model):
     product.set_weighted_rating()
     product.save()
 
+    # Close the browser instance used to fetch pages.
+    page_fetcher.driver.close()
+
     return product
 
   @common.timer
@@ -207,10 +210,10 @@ class Review(models.Model):
     """Creates a review for the given UID by fetching remote data."""
     page_fetcher = page_fetcher or fetcher.PageFetcher()
     review_page_url = REVIEW_PAGE_URL.format(uid=uid)
-    review_page = page_fetcher.fetch_page(review_page_url)
     retries = 0
     for _ in range(MAX_RETRIES):
       retries += 1
+      review_page = page_fetcher.fetch_page(review_page_url)
       try:
         review = scraper.get_review(review_page)
         break
@@ -219,6 +222,7 @@ class Review(models.Model):
             retries, review_page_url)
     reviewer_page = page_fetcher.fetch_page(review.reviewer_url)
     review.reviewer_rank = scraper.get_rank(reviewer_page)
+    review.uid = uid
     review.save()
     print 'Review #{} has been fetched, created, and saved.'.format(uid)
     return review
