@@ -125,6 +125,13 @@ class Product(models.Model):
 
   def set_weighted_rating(self, training_set=None):
     """Computes and sets the weighted rating if it was successful."""
+    try:
+      training_set = (training_set or self.training_set or
+                      TrainingSet.objects.latest())
+    except TrainingSet.DoesNotExist:
+      training_set = None
+    if not training_set:
+      return False
     weighted_rating = self.get_weighted_rating(None, training_set)
     if weighted_rating:
       self.weighted_rating = weighted_rating
@@ -138,14 +145,6 @@ class Product(models.Model):
     """Computes a weighted rating based on review criteria and weights."""
     # Fetch the associated Review objects and latest TrainingSet object.
     reviews = reviews or self.reviews.all()
-    try:
-      training_set = (training_set or self.training_set or
-                      TrainingSet.objects.latest())
-    except TrainingSet.DoesNotExist:
-      training_set = None
-    # Unable to get a weighted rating if there are no weights.
-    if not training_set:
-      return None
     # Sum up the products of each criteria and its weight.
     total = 0.0
     for review in reviews:
@@ -154,7 +153,7 @@ class Product(models.Model):
       total += review.weight
     # Add up the weighted review ratings to a total weighted rating.
     weighted_rating = sum([review.rating * review.weight / total
-                           for review in reviews])
+                           for review in reviews]) if total else 0
     return weighted_rating
 
 

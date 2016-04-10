@@ -20,5 +20,6 @@ import views
 urlpatterns = [
     url(r'^$', views.search_handler),
     url(r'^admin/', admin.site.urls),
-    url(r'^search/(?P<asin>[a-zA-Z0-9]*)/?$', views.search_handler)
+    url(r'^search/(?P<asin>[a-zA-Z0-9]*)/?$', views.search_handler),
+    url(r'^train/(?P<asin>[a-zA-Z0-9]*)/?$', views.train_handler)
 ]
