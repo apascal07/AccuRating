@@ -1,10 +1,27 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Training Dashboard</title>
 </head>
 <body>
-    <h1>hello world</h1>
+    <marquee behavior="alternate" style="height: 25%">
+        <marquee direction="up" behavior="alternate"  style="height: 100%">
+            <h1>Training Dashboard</h1>
+        </marquee>
+    </marquee>
+    {% if form %}
+        {{ form }}
+    {% endif %}
+    <div class="container" style="width: 40%">
+        <form class="form">
+            <h2 class="form">Please enter ASIN</h2>
+            <input id="ssidInput" class="form-control" placeholder="Enter ASIN" autofocus="true">
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
+        </form>
+    </div>
 </body>
 </html>

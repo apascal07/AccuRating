@@ -1,8 +1,11 @@
-from django import http, shortcuts
+from django import http, shortcuts, forms
 
 
 def dashboard(request, **kwargs):
-  context = {}
+  class ASINForm(forms.Form):
+    ASIN = forms.CharField(max_length=100)
+
+  context = {'form': ASINForm()}
   return shortcuts.render(request, 'dashboard.html', context)
 
 
