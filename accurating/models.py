@@ -2,83 +2,120 @@ import common
 import datetime
 import fetcher
 import json
-import logging
 import math
 import parser
 import pprint
+import re
 import scraper
 
 from django.db import models
 
 
-PRODUCT_REVIEWS_URL = 'http://amazon.com/product-reviews/{asin}'
+REVIEW_LIST_URL = 'http://amazon.com/product-reviews/{asin}/'
+REVIEW_PAGE_URL = 'http://amazon.com/review/{uid}/'
+MAX_RETRIES = 10
 
 
 class Product(models.Model):
   """A Product object contains meta data and references to its reviews."""
 
   # Data retrieved from scraping the Amazon pages.
+  asin = models.CharField(max_length=32)
   title = models.CharField(max_length=300)
   product_url = models.URLField()
   description = models.TextField()
   reviews = models.ManyToManyField('Review')
   retrieved = models.DateTimeField(auto_now_add=True)
-  newest = models.DateTimeField()
-  oldest = models.DateTimeField()
+  newest = models.DateTimeField(null=True, blank=True, default=None)
+  oldest = models.DateTimeField(null=True, blank=True, default=None)
   amazon_rating = models.FloatField()
 
   # Data computed by the system.
-  average_rating = models.FloatField()
-  weighted_rating = models.FloatField()
-  training_set = models.ForeignKeyField('TrainingSet', models.SET_NULL)
+  average_rating = models.FloatField(null=True, blank=True, default=None)
+  weighted_rating = models.FloatField(null=True, blank=True, default=None)
+  training_set = models.ForeignKey('TrainingSet', models.SET_NULL, null=True)
 
   @classmethod
   @common.timer
-  def create_product(self, asin, force=False):
-    """Creates a Product object for the given ASIN by fetching remote data."""
+  def get_or_create_product(self, asin):
+    """Retrieves the product, if it exists, else creates from remote data."""
+    product = self.get_product(asin)
+    if not product:
+      print 'Beginning fetching process for product #{}...'.format(asin)
+      product = self.create_product(asin)
+    return product
+
+  @classmethod
+  @common.timer
+  def get_product(self, asin):
+    """Retrieves the product from the database."""
+    product = None
+    try:
+      product = self.objects.get(asin=asin)
+    except self.DoesNotExist:
+      print 'Product #{} does not exist in the database.'.format(asin)
+    return product
+
+  @classmethod
+  @common.timer
+  def create_product(self, asin):
+    """Creates a product for the given ASIN by fetching remote data."""
     page_fetcher = fetcher.PageFetcher()
+
     # Fetch product metadata from the Amazon API and create a Product object.
+    print 'Fetching product #{} from Amazon API...'.format(asin)
     product_meta = page_fetcher.fetch_product(asin)
     product = scraper.get_product(product_meta)
+
     # Fetch the first review list page and extract the page count and rating.
-    reviews_url = PRODUCT_REVIEWS_URL.format(asin=asin)
-    first_page = page_fetcher.fetch_pages([reviews_url])[0]
+    reviews_url = REVIEW_LIST_URL.format(asin=asin)
+    print 'Fetching first page of reviews...'
+    first_page = page_fetcher.fetch_page(reviews_url)
     page_count = scraper.get_page_count(first_page) or 1
+    print 'Found {} pages of reviews...'.format(page_count)
     product.amazon_rating = scraper.get_amazon_rating(first_page)
+
     # Compile a list of review list page URLs and fetch all review list pages.
     review_list_pages = [first_page]
-    if page_count > 1:
-      review_list_urls = [common.update_url(reviews_url, {'page': page})
-                          for page in range(2, page_count + 1)]
-      review_list_pages.extend(page_fetcher.fetch_pages(review_list_urls))
-    # Compile a list of all of the review page URLs and fetch all review pages.
-    review_page_urls = []
-    for review_list_page in review_list_pages:
-      review_page_urls.extend(scraper.get_review_url_list(review_list_page))
-    review_pages = page_fetcher.fetch_pages(review_page_urls)
-    # Create Review objects, update oldest/newest review date, and save.
+    for i in range(2, page_count + 1):
+      paginated_url = common.update_url(reviews_url, {'pageNumber': i})
+      print 'Fetching page {} of reviews...'.format(i)
+      review_list_page = page_fetcher.fetch_page(paginated_url)
+      review_list_pages.append(review_list_page)
+
+    # Fetch each review and its associated reviewer and populate the database.
+    reviews = []
     product.oldest = datetime.datetime.now()
     product.newest = datetime.datetime(1970, 1, 1)
-    for review_page in review_pages:
-      review = scraper.get_review(review_page)
-      product.oldest = min(product.oldest, review.timestamp)
-      product.newest = max(product.newest, review.timestamp)
-      reviewer_page = page_fetcher.fetch_pages([review.reviewer_url])[0]
-      review.reviewer_rank = scraper.get_rank(reviewer_page)
-      review.save()
-      product.reviews.append(review.key)
-    # Process the Product to compute all dynamic criteria values.
+    for i, review_list_page in enumerate(review_list_pages):
+      print 'Scraping page {} of reviews...'.format(i + 1)
+      review_page_urls = scraper.get_review_url_list(review_list_page)
+      for review_page_url in review_page_urls:
+        review_uid = Review.get_uid_from_url(review_page_url)
+        review = Review.get_or_create_review(review_uid, page_fetcher)
+        product.oldest = min(product.oldest, review.timestamp)
+        product.newest = max(product.newest, review.timestamp)
+        reviews.append(review)
+
+    # Save the product to init the object and add the now-successful reviews.
+    product.save()
+    product.reviews.add(*reviews)
+
+    # Process the product's dynamic criteria and possibly weighted rating.
     product.set_dynamic_criteria()
-    # Set the weighted rating if a TrainingSet is available.
     product.set_weighted_rating()
     product.save()
+
+    # Close the browser instance used to fetch pages.
+    page_fetcher.driver.close()
+
     return product
 
   @common.timer
   def set_dynamic_criteria(self):
     """Generates and sets all dynamic criteria values."""
-    reviews = Review.get_all_by_ids(self.reviews)
-    text_parser = parser.Parser(reviews, self.description)
+    reviews = self.reviews.all()
+    text_parser = parser.TextParser(reviews, self.description)
     total = 0.0
     for review in reviews:
       review.set_dynamic_criteria(text_parser, self.oldest, self.newest)
@@ -88,6 +125,13 @@ class Product(models.Model):
 
   def set_weighted_rating(self, training_set=None):
     """Computes and sets the weighted rating if it was successful."""
+    try:
+      training_set = (training_set or self.training_set or
+                      TrainingSet.objects.latest())
+    except TrainingSet.DoesNotExist:
+      training_set = None
+    if not training_set:
+      return False
     weighted_rating = self.get_weighted_rating(None, training_set)
     if weighted_rating:
       self.weighted_rating = weighted_rating
@@ -100,12 +144,7 @@ class Product(models.Model):
   def get_weighted_rating(self, reviews=None, training_set=None):
     """Computes a weighted rating based on review criteria and weights."""
     # Fetch the associated Review objects and latest TrainingSet object.
-    reviews = reviews or Review.get_all_by_ids(self.reviews)
-    training_set = (training_set or self.training_set or
-                    TrainingSet.objects.latest())
-    # Unable to get a weighted rating if there are no weights.
-    if not training_set:
-      return None
+    reviews = reviews or self.reviews.all()
     # Sum up the products of each criteria and its weight.
     total = 0.0
     for review in reviews:
@@ -114,7 +153,7 @@ class Product(models.Model):
       total += review.weight
     # Add up the weighted review ratings to a total weighted rating.
     weighted_rating = sum([review.rating * review.weight / total
-                           for review in reviews])
+                           for review in reviews]) if total else 0
     return weighted_rating
 
 
@@ -122,14 +161,15 @@ class Review(models.Model):
   """A Review object contains a single review for a single product."""
 
   # Data retrieved from scraping the Amazon pages.
+  uid = models.CharField(max_length=16)
   rating = models.FloatField()
   text = models.TextField()
   upvote_count = models.IntegerField(default=0)
   downvote_count = models.IntegerField(default=0)
   timestamp = models.DateTimeField()
   reviewer_url = models.URLField()
-  reviewer_name = models.CharField(max_length=128)
-  reviewer_rank = models.IntegerField()
+  reviewer_name = models.CharField(max_length=64)
+  reviewer_rank = models.IntegerField(default=0)
 
   # Available dynamic criteria generated by the system.
   verified = models.FloatField(default=0.0)
@@ -140,6 +180,51 @@ class Review(models.Model):
 
   # Data generated by the system.
   weight = models.FloatField(default=0.0)
+
+  @classmethod
+  @common.timer
+  def get_or_create_review(self, uid, page_fetcher=None):
+    """Retrieves the review, if it exists, else creates from remote data."""
+    review = self.get_review(uid)
+    if not review:
+      print 'Beginning fetching process for review #{}...'.format(uid)
+      review = self.create_review(uid, page_fetcher)
+    return review
+
+  @classmethod
+  @common.timer
+  def get_review(self, uid):
+    """Retrieves the review from the database."""
+    review = None
+    try:
+      review = self.objects.get(uid=uid)
+      print 'Retrieved review #{} from the database.'.format(uid)
+    except self.DoesNotExist:
+      print 'Review #{} does not exist in the database.'.format(uid)
+    return review
+
+  @classmethod
+  @common.timer
+  def create_review(self, uid, page_fetcher=None):
+    """Creates a review for the given UID by fetching remote data."""
+    page_fetcher = page_fetcher or fetcher.PageFetcher()
+    review_page_url = REVIEW_PAGE_URL.format(uid=uid)
+    retries = 0
+    for _ in range(MAX_RETRIES):
+      retries += 1
+      review_page = page_fetcher.fetch_page(review_page_url)
+      try:
+        review = scraper.get_review(review_page)
+        break
+      except Exception:
+        print 'Attempt {} to parse review URL {} failed.'.format(
+            retries, review_page_url)
+    reviewer_page = page_fetcher.fetch_page(review.reviewer_url)
+    review.reviewer_rank = scraper.get_rank(reviewer_page)
+    review.uid = uid
+    review.save()
+    print 'Review #{} has been fetched, created, and saved.'.format(uid)
+    return review
 
   @common.timer
   def set_dynamic_criteria(self, text_parser, oldest, newest):
@@ -183,13 +268,19 @@ class Review(models.Model):
     return min(max(0.5 + 0.7 * math.atan(float(-rank) / 250000 + 2) /
                    (math.pi / 2), 0), 1) if rank > 0 else 0
 
+  @staticmethod
+  def get_uid_from_url(url):
+    """Extracts the review UID from a given URL."""
+    match = re.search(r'review[s]?\/([a-zA-Z0-9]*)\/?', url)
+    return match.group(1) if match else None
+
 
 class TrainingSet(models.Model):
   """A TrainingSet object contains meta data about a training attempt."""
   start_timestamp = models.DateTimeField(auto_now_add=True)
   end_timestamp = models.DateTimeField()
-  _criteria_weights = models.TextField()
-  training_product = models.ForeignKeyField('Product', models.CASCADE)
+  _criteria_weights = models.TextField(null=True)
+  training_product = models.ForeignKey('Product', models.CASCADE)
 
   @property
   def criteria_weights(self):
@@ -198,3 +289,6 @@ class TrainingSet(models.Model):
   @criteria_weights.setter
   def criteria_weights(self, criteria_weights):
     self._criteria_weights = json.dumps(criteria_weights)
+
+  class Meta:
+    get_latest_by = 'end_timestamp'

@@ -2,8 +2,6 @@
 .idea
 .git
 *.pyc
-lib/amazon-product-api.conf
-lib/.amazon-product-api
-lib/amazon-product-api
-test_files
 db.sqlite3
+accurating/db.sqlite3
+accurating/amazon-product-api.cfg
