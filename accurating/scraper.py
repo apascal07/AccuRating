@@ -107,8 +107,12 @@ def get_review(html):
   dates = [_get_date(tag.text) for tag in _select_all(dom, 'nobr')]
   review.timestamp = filter(None, dates)[0]
 
-  reviewer_element = _select(dom, '.hReview .reviewer .url')
-  review.reviewer_url = 'http://www.amazon.com{}'.format(reviewer_element['href'])
+  reviewer_element = _select(dom, '.hReview .reviewer .url', important=False)
+  if reviewer_element is None:
+    review.reviewer_url = None
+    review.reviewer_rank = 0
+  else:
+    review.reviewer_url = 'http://www.amazon.com{}'.format(reviewer_element['href'])
   vote_text = _select(dom, '.reviewText').parent.find('div', text=re.compile('^\s+{0} of {0} .+'.format(num_format)))
 
   if vote_text:

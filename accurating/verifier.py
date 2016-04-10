@@ -10,7 +10,9 @@ def verify(ssids):
         average_simple_error: The average difference between Amazon's rating and the simple rating
         percent_requirements_met: The average number of products that met the requirements
     """
-    simple_total = accurating_total = requirements_met_total = 0
+    simple_total = 0
+    accurating_total = 0
+    requirements_met_total = 0
     for ssid in ssids:
         product = models.Product.get_or_create_product(ssid)
         simple_error = abs(product.average_rating - product.amazon_rating)
