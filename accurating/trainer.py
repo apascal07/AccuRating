@@ -38,10 +38,10 @@ def get_progress():
   pass
 
 
-def _multichoose(n,k):
+def _multichoose(n, k):
   """n is num weights and k is the num steps"""
   if k < 0 or n < 0: return "Error"
-  if not k: return [[0]*n]
+  if not k: return [[0] * n]
   if not n: return []
   if n == 1: return [[k]]
-  return [[0]+val for val in _multichoose(n-1,k)] + [[val[0]+1]+val[1:] for val in _multichoose(n,k-1)]
+  return [[0]+val for val in _multichoose(n-1, k)] + [[val[0]+1]+val[1:] for val in _multichoose(n,k-1)]
