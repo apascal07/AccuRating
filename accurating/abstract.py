@@ -21,3 +21,12 @@ class AbstractTextParser():
   @abc.abstractmethod
   def get_text_quality(self, text):
     pass
+
+
+class AbstractTrainer():
+
+  __metaclass__ = abc.ABCMeta
+
+  @abc.abstractmethod
+  def train(self, asins, criteria, increments):
+    pass

@@ -33,7 +33,6 @@ class Product(models.Model):
   # Data computed by the system.
   average_rating = models.FloatField(null=True, blank=True, default=None)
   weighted_rating = models.FloatField(null=True, blank=True, default=None)
-  training_set = models.ForeignKey('TrainingSet', models.SET_NULL, null=True)
 
   @classmethod
   @common.timer
@@ -52,6 +51,7 @@ class Product(models.Model):
     product = None
     try:
       product = self.objects.get(asin=asin)
+      product.set_weighted_rating()
     except self.DoesNotExist:
       print 'Product #{} does not exist in the database.'.format(asin)
     return product
@@ -126,8 +126,7 @@ class Product(models.Model):
   def set_weighted_rating(self, training_set=None):
     """Computes and sets the weighted rating if it was successful."""
     try:
-      training_set = (training_set or self.training_set or
-                      TrainingSet.objects.latest())
+      training_set = training_set or TrainingSet.objects.latest()
     except TrainingSet.DoesNotExist:
       training_set = None
     if not training_set:
@@ -143,7 +142,6 @@ class Product(models.Model):
 
   def get_weighted_rating(self, reviews=None, training_set=None):
     """Computes a weighted rating based on review criteria and weights."""
-    # Fetch the associated Review objects and latest TrainingSet object.
     reviews = reviews or self.reviews.all()
     # Sum up the products of each criteria and its weight.
     total = 0.0
@@ -280,7 +278,7 @@ class TrainingSet(models.Model):
   start_timestamp = models.DateTimeField(auto_now_add=True)
   end_timestamp = models.DateTimeField()
   _criteria_weights = models.TextField(null=True)
-  training_product = models.ForeignKey('Product', models.CASCADE)
+  training_products = models.ManyToManyField('Product')
 
   @property
   def criteria_weights(self):
@@ -289,6 +287,9 @@ class TrainingSet(models.Model):
   @criteria_weights.setter
   def criteria_weights(self, criteria_weights):
     self._criteria_weights = json.dumps(criteria_weights)
+
+  def __repr__(self):
+    return str(self.__dict__)
 
   class Meta:
     get_latest_by = 'end_timestamp'
