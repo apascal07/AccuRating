@@ -1,12 +1,3 @@
-from django import http, shortcuts, forms
-
-
-def dashboard(request, **kwargs):
-  class ASINForm(forms.Form):
-    ASIN = forms.CharField(max_length=100)
-
-  context = {'form': ASINForm()}
-  return shortcuts.render(request, 'dashboard.html', context)
 import models
 import pprint
 import trainer
@@ -25,6 +16,7 @@ def search_handler(request, **kwargs):
   #   pprint.pprint(review.__dict__)
   return response
 
+
 def train_handler(request, **kwargs):
   trainer_ = trainer.Trainer()
   ps = [p.asin for p in models.Product.objects.all()]
@@ -32,5 +24,5 @@ def train_handler(request, **kwargs):
   pprint.pprint(tset.__dict__)
   for p in ps:
     pro = models.Product.get_product(p)
-    print 'amaz: {}, avg: {}, smart: {}'.format(pro.amazon_rating, pro.average_rating, pro.weighted_rating)
+    print 'asin: {}, amaz: {}, avg: {}, smart: {}, error: {}'.format(pro.asin, pro.amazon_rating, pro.average_rating, pro.weighted_rating, pro.amazon_rating - pro.weighted_rating)
   return http.HttpResponse()

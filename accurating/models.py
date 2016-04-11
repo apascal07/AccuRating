@@ -88,9 +88,10 @@ class Product(models.Model):
     product.oldest = datetime.datetime.now()
     product.newest = datetime.datetime(1970, 1, 1)
     for i, review_list_page in enumerate(review_list_pages):
-      print 'Scraping page {} of reviews...'.format(i + 1)
       review_page_urls = scraper.get_review_url_list(review_list_page)
-      for review_page_url in review_page_urls:
+      for j, review_page_url in enumerate(review_page_urls):
+        print ('Scraping review {} on page {}/{}...'.format(j + 1, i + 1,
+               len(review_list_pages)))
         review_uid = Review.get_uid_from_url(review_page_url)
         review = Review.get_or_create_review(review_uid, page_fetcher)
         product.oldest = min(product.oldest, review.timestamp)
