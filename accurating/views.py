@@ -1,6 +1,8 @@
 import models
 import pprint
 import trainer
+import verifier
+import json
 from django import http, shortcuts
 
 
@@ -26,3 +28,8 @@ def train_handler(request, **kwargs):
     pro = models.Product.get_product(p)
     print 'asin: {}, amaz: {}, avg: {}, smart: {}, error: {}'.format(pro.asin, pro.amazon_rating, pro.average_rating, pro.weighted_rating, pro.amazon_rating - pro.weighted_rating)
   return http.HttpResponse()
+
+
+def verification_handler(request):
+  asins = [p.asin for p in models.Product.objects.all()]
+  return http.HttpResponse(str(verifier.verify(asins)))
