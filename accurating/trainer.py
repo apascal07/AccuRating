@@ -20,9 +20,12 @@ class Trainer(abstract.AbstractTrainer):
     training_set = models.TrainingSet()
     training_set.criteria_weights = {criterion: 0 for criterion in criteria}
     reviews = [product.reviews.all() for product in products]
-    min_delta = sum([abs(product.amazon_rating - product.average_rating) for
-                     product in products])
-    min_delta_weights = training_set.criteria_weights
+    min_delta = float('inf')
+    min_delta_weights = None
+
+    # Update the dynamic criteria in case the algorithms have changed.
+    for product in products:
+      product.set_dynamic_criteria()
 
     # Generate the criteria weights matrix and try each permutation.
     training_set.start_timestamp = datetime.datetime.now()
@@ -36,19 +39,20 @@ class Trainer(abstract.AbstractTrainer):
         training_set.criteria_weights = criteria_weights
 
       # Calculate the weighted ratings and find the sum of the target deltas.
-      weighted_ratings = [product.get_weighted_rating(reviews[i], training_set)
-                          for i, product in enumerate(products)]
+      weighted_ratings = [product.get_weighted_rating(review, training_set)
+                          for product, review in zip(products, reviews)]
       delta = sum([abs(product.amazon_rating - weighted_rating) for product,
                    weighted_rating in zip(products, weighted_ratings)])
       if delta < min_delta:
         min_delta = delta
-        min_delta_weights = copy.deepcopy(training_set.criteria_weights)
+        min_delta_weights = training_set.criteria_weights
 
     # Set the weighted rating for each product using the optimal weights set.
     training_set.end_timestamp = datetime.datetime.now()
     training_set.criteria_weights = min_delta_weights
     training_set.save()
     training_set.training_products.add(*products)
+    training_set.success = min_delta_weights is not None
     training_set.save()
 
     return training_set

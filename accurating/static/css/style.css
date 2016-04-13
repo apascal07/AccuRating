@@ -1,0 +1,53 @@
+.container {
+  width: 960px;
+  min-width: 800px;
+  padding: 50px 0;
+}
+
+.search-form {
+  padding-top: 40px;
+}
+
+#search-input {
+  display: inline;
+  width: 780px;
+}
+
+.search-submit {
+  float: right;
+  disply: block;
+  width: 160px;
+}
+
+.search-area, .product-area {
+  margin-bottom: 60px;
+}
+
+.product-area {
+  margin-top: 20px;
+}
+
+.list-group-header {
+  background: #fafafa;
+}
+
+.icon-gold {
+  color: #FFDF00;
+}
+
+.product-item a {
+  display: block;
+}
+
+.logo {
+  color: inherit;
+}
+
+.navigation {
+  padding-left: 20px;
+}
+
+.rating-box {
+  display: inline-block;
+  padding: 0 10px;
+}

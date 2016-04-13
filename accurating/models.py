@@ -33,6 +33,9 @@ class Product(models.Model):
   # Data computed by the system.
   average_rating = models.FloatField(null=True, blank=True, default=None)
   weighted_rating = models.FloatField(null=True, blank=True, default=None)
+  error = models.FloatField(null=True, blank=True, default=None)
+  within_target = models.BooleanField(default=False)
+  training_set = models.ForeignKey('TrainingSet', null=True, default=None)
 
   @classmethod
   @common.timer
@@ -51,7 +54,10 @@ class Product(models.Model):
     product = None
     try:
       product = self.objects.get(asin=asin)
-      product.set_weighted_rating()
+      latest = TrainingSet.objects.filter(success=True).latest('end_timestamp')
+      if not product.training_set or product.training_set.id != latest.id:
+        print 'Setting weighted rating based on latest training set...'
+        product.set_weighted_rating(training_set=latest)
     except self.DoesNotExist:
       print 'Product #{} does not exist in the database.'.format(asin)
     return product
@@ -127,21 +133,26 @@ class Product(models.Model):
   def set_weighted_rating(self, training_set=None):
     """Computes and sets the weighted rating if it was successful."""
     try:
-      training_set = training_set or TrainingSet.objects.latest()
+      training_set = (training_set or TrainingSet.objects.filter(success=True)
+                      .latest('end_timestamp'))
     except TrainingSet.DoesNotExist:
+      print 'Could not retrieve latest successful TrainingSet.'
       training_set = None
     if not training_set:
       return False
-    weighted_rating = self.get_weighted_rating(None, training_set)
+    weighted_rating = self.get_weighted_rating(None, training_set, True)
     if weighted_rating:
       self.weighted_rating = weighted_rating
       self.training_set = training_set
+      self.error = abs(self.amazon_rating - self.weighted_rating)
+      self.within_target = (abs(self.amazon_rating - self.average_rating) >
+                            abs(self.amazon_rating - self.weighted_rating))
       self.training_set.save()
       self.save()
       return True
     return False
 
-  def get_weighted_rating(self, reviews=None, training_set=None):
+  def get_weighted_rating(self, reviews=None, training_set=None, save=False):
     """Computes a weighted rating based on review criteria and weights."""
     reviews = reviews or self.reviews.all()
     # Sum up the products of each criteria and its weight.
@@ -149,6 +160,8 @@ class Product(models.Model):
     for review in reviews:
       review.weight = sum([getattr(review, c, 0) * w for c, w in
                            training_set.criteria_weights.iteritems()])
+      if save:
+        review.save()
       total += review.weight
     # Add up the weighted review ratings to a total weighted rating.
     weighted_rating = sum([review.rating * review.weight / total
@@ -236,18 +249,13 @@ class Review(models.Model):
     self.relative_rank = self.get_relative_rank(self.reviewer_rank)
     self.save()
 
-  @classmethod
-  def get_all_by_ids(self, ids):
-    """Retrives all of the Review objects for the list of ids."""
-    return self.objects.filter(id__in=ids)
-
   @staticmethod
   def get_vote_confidence(upvotes, downvotes):
     """Calculates the vote confidence based on the upvote/downvote count."""
     votes = upvotes + downvotes
     if votes == 0:
       return 0
-    confidence = 1.281551565545  # 80% confidence
+    confidence = 1.282  # 80% confidence
     positive_ratio = float(upvotes) / votes
     left = positive_ratio + math.pow(confidence, 2) / (2 * votes)
     right = (confidence * math.sqrt(positive_ratio * (1 - positive_ratio) /
@@ -265,8 +273,11 @@ class Review(models.Model):
   @staticmethod
   def get_relative_rank(rank):
     """Calculates the relative rank based on an integer rank from 1-1000000."""
-    return min(max(0.5 + 0.7 * math.atan(float(-rank) / 250000 + 2) /
-                   (math.pi / 2), 0), 1) if rank > 0 else 0
+    # Subtle tangent curve emphasizing first half and de-emphasizing second:
+    # return min(max(0.5 + 0.7 * math.atan(float(-rank) / 250000 + 2) /
+    #                (math.pi / 2), 0), 1) if rank > 0 else 0
+    n = 50000000
+    return max(float(n - rank) / n, 0) if rank > 0 else 0
 
   @staticmethod
   def get_uid_from_url(url):
@@ -281,6 +292,7 @@ class TrainingSet(models.Model):
   end_timestamp = models.DateTimeField()
   _criteria_weights = models.TextField(null=True)
   training_products = models.ManyToManyField('Product')
+  success = models.BooleanField(default=False)
 
   @property
   def criteria_weights(self):
@@ -292,6 +304,3 @@ class TrainingSet(models.Model):
 
   def __repr__(self):
     return str(self.__dict__)
-
-  class Meta:
-    get_latest_by = 'end_timestamp'

@@ -1,0 +1,58 @@
+<div class="row search-area">
+  <div class="col-xs-12">
+    <form class="search-form form-inline">
+      <button type="submit" class="search-submit btn btn-lg btn-success">Search</button>
+      <input type="search" id="search-input" class="search-input form-control input-lg" name="asin" placeholder="Search product by ASIN (e.g. B00SM99KWU)">
+    </form>
+  </div>
+</div>
+<div class="row product-list-area">
+  <div class="col-xs-12">
+    <div class="list-group product-list">
+      <div class="list-group-item list-group-header">
+        <div class="row">
+          <div class="col-xs-2">ASIN</div>
+          <div class="col-xs-5">Product</div>
+          <div class="col-xs-1">Reviews</div>
+          <div class="col-xs-1">Average</div>
+          <div class="col-xs-1">Weighted</div>
+          <div class="col-xs-1">Amazon</div>
+          <div class="col-xs-1">Error</div>
+        </div>
+      </div>
+      {% for product in products %}
+        <div class="list-group-item product-item">
+          <div class="row">
+            <div class="col-xs-2"><div>{{ product.asin }}</div></div>
+            <div class="col-xs-5"><a href="/search/{{ product.asin }}/">{{ product.title }}</a></div>
+            <div class="col-xs-1">
+              {{ product.reviews.count }}
+            </div>
+            <div class="col-xs-1">
+              <span class="icon-gold glyphicon glyphicon-star"></span>
+              {{ product.average_rating|floatformat:2 }}
+            </div>
+            <div class="col-xs-1">
+              <span class="icon-gold glyphicon glyphicon-star"></span>
+              {{ product.weighted_rating|floatformat:2 }}
+            </div>
+            <div class="col-xs-1">
+              <span class="icon-gold glyphicon glyphicon-star"></span>
+              {{ product.amazon_rating|floatformat:2 }}
+            </div>
+            <div class="col-xs-1">
+              <span class="{{ product.within_target|yesno:'text-success,text-danger' }}">
+                <span class="glyphicon {{ product.within_target|yesno:'glyphicon-ok,glyphicon-remove' }}"></span>
+                {{ product.error|floatformat:2 }}
+              </span>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="list-group-item">
+          No recent products.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>

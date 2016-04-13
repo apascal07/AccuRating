@@ -1,0 +1,71 @@
+<div class="row product-area">
+  <div class="col-xs-12 text-center">
+    <h3>{{ product.title }}</h3>
+    <p><small><a href="http://amazon.com/dp/{{ product.asin }}/">http://amazon.com/dp/{{ product.asin }}/</a> <span class="text-muted">&mdash; Data retrieved on {{ product.retrieved|date:'F d, Y' }}.</span></small></p>
+    <div class="rating-box">
+      <h3 class="score">
+        <span class="icon-gold glyphicon glyphicon-star"></span> {{ product.average_rating|floatformat:2 }}
+      </h3>
+      Average Rating
+    </div>
+    <div class="rating-box">
+      <h3 class="score">
+        <span class="icon-gold glyphicon glyphicon-star"></span> {{ product.weighted_rating|floatformat:2 }}
+      </h3>
+      Weighted Rating
+    </div>
+    <div class="rating-box">
+      <h3 class="score">
+        <span class="icon-gold glyphicon glyphicon-star"></span> {{ product.amazon_rating|floatformat:2 }}
+      </h3>
+      Amazon Rating
+    </div>
+    <div class="rating-box">
+      <h3 class="score">
+        <span class="glyphicon {{ product.within_target|yesno:'text-success glyphicon-ok,text-danger glyphicon-remove' }}"></span> {{ product.error|floatformat:2 }}
+      </h3>
+      Target Error
+    </div>
+  </div>
+</div>
+<div class="row review-list-area">
+  <div class="col-xs-12">
+    <div class="list-group product-list">
+      <div class="list-group-item list-group-header">
+        <div class="row">
+          <div class="col-xs-1">Rating</div>
+          <div class="col-xs-2">Date</div>
+          <div class="col-xs-4">Review ID</div>
+          <div class="col-xs-1">Verified</div>
+          <div class="col-xs-1">Age</div>
+          <div class="col-xs-1">Votes</div>
+          <div class="col-xs-1">Rank</div>
+          <div class="col-xs-1">Weight</div>
+        </div>
+      </div>
+      {% for review in reviews %}
+        <div class="list-group-item review-item">
+          <div class="row">
+            <div class="col-xs-1">
+              <span class="icon-gold glyphicon glyphicon-star"></span>
+              {{ review.rating|floatformat:0 }}
+            </div>
+            <div class="col-xs-2">{{ review.timestamp|date:'F d, Y' }}</div>
+            <div class="col-xs-4">
+              <a href="http://amazon.com/review/{{ review.uid }}/">{{ review.uid }}</a>
+            </div>
+            <div class="col-xs-1">{{ review.verified|yesno:'Yes,No' }}</div>
+            <div class="col-xs-1">{{ review.review_age|floatformat:2 }}</div>
+            <div class="col-xs-1">{{ review.vote_confidence|floatformat:2 }}</div>
+            <div class="col-xs-1">{{ review.relative_rank|floatformat:2 }}</div>
+            <div class="col-xs-1">{{ review.weight|floatformat:2 }}</div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="list-group-item">
+          No reviews found.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
