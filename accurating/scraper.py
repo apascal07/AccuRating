@@ -2,6 +2,7 @@
 import models
 import bs4
 import datetime
+import dateutil.parser
 import re
 
 num_format = '(\d+(?:\,\d{3})*)'
@@ -91,6 +92,42 @@ def get_review_url_list(html):
   dom = bs4.BeautifulSoup(html, 'html.parser')
   titles = _select_all(dom, 'a.review-title')
   return ['http://www.amazon.com{}'.format(title['href']) for title in titles]
+
+
+def get_review_list(html):
+  """
+  Returns a list of URLs that link to amazon reviews
+  :param html: A string containing the html of a product ratings page
+  :return: A list of URL strings
+  """
+  dom = bs4.BeautifulSoup(html, 'html.parser')
+  review_divs = _select_all(dom, '.a-section.review')
+  reviews = []
+
+  for div in review_divs:
+    review = models.Review()
+    review.text = _select(div, 'review-text').text
+    review.verified = _find(div, text='Verified Purchase', important=False) is not None
+    review.timestamp = dateutil.parser.parse(_select(div, 'review-date').text)
+    review.rating = float(_select(div, 'a-icon-alt').text[:3])
+
+    vote_text = _select(div, '.review_votes')
+    if vote_text is None:
+      review.upvote_count = 0
+    else:
+      review.upvote_count = int(re.findall(re.compile(num_format), vote_text.text))
+
+    reviewer_element = _select(div, 'a.author', important=False)
+    if reviewer_element is None:
+      review.reviewer_url = None
+      review.reviewer_rank = 0
+    else:
+      review.reviewer_url = 'http://www.amazon.com{}'.format(reviewer_element['href'])
+
+    reviews.append(review)
+
+  return reviews
+
 
 
 def get_review(html):
