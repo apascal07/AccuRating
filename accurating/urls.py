@@ -18,7 +18,7 @@ from django.contrib import admin
 import views
 
 urlpatterns = [
-    url(r'^$', views.search_handler),
+    url(r'^$', views.search_view),
     url(r'^admin/', admin.site.urls),
     url(r'^search/$', views.search_view),
     url(r'^search/(?P<asin>[a-zA-Z0-9]*)/$', views.results_view),
