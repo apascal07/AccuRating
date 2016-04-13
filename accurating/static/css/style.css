@@ -51,3 +51,30 @@
   display: inline-block;
   padding: 0 10px;
 }
+
+.tab-wrapper {
+  margin-top: 40px;
+}
+
+.tab-content {
+  padding-top: 30px;
+}
+
+.training-set-list {
+  width: 980px;
+  margin-left: -10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.training-set {
+  padding: 0 10px;
+}
+
+.training-set-form {
+  float: right;
+}
+
+.train-input {
+  margin-bottom: 30px;
+}

@@ -1,0 +1,135 @@
+<div class="tab-wrapper">
+  <ul class="nav nav-tabs">
+    <li class="active"><a href="#trainingsets" data-toggle="tab">Training Sets</a></li>
+    <li><a href="#products" data-toggle="tab">Products</a></li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane active" id="trainingsets">
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="training-set-list" data-col-min-width="300">
+            {% for training_set in training_sets %}
+              <div class="list-group training-set">
+                <div class="list-group-item list-group-item-{{ training_set.active|yesno:'info,header' }}">
+                  <div class="row">
+                    <div class="col-xs-5"><strong class="text-{{ training_set.success|yesno:'primary,danger' }}"><span class="glyphicon glyphicon-{{ training_set.success|yesno:'ok,remove' }}"></span> {{ training_set.success|yesno:'Success,Fail' }}</strong></div>
+                    <div class="col-xs-7 training-set-actions">
+                      <form class="training-set-form" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="uid" value="{{ training_set.id }}">
+                        {% if training_set.success %}
+                          <button type="submit" class="btn btn-{{ training_set.active|yesno:'primary,default'}} btn-xs" name="op-type" value="set_active">
+                            <span class="glyphicon glyphicon-{{ training_set.active|yesno:'ok,flag' }}"></span>
+                            {{ training_set.active|yesno:'Active,Set Active' }}
+                          </button>
+                        {% endif %}
+                        <button type="submit" class="btn btn-danger btn-xs" name="op-type" value="delete">
+                          <span class="glyphicon glyphicon-trash"></span>
+                          Delete
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <div class="list-group-item">
+                  <div class="row">
+                    <div class="col-xs-4"><strong>Timestamp</strong></div>
+                    <div class="col-xs-8">{{ training_set.end_timestamp }}</div>
+                  </div>
+                </div>
+                <div class="list-group-item">
+                  <div class="row">
+                    <div class="col-xs-4"><strong>Weights</strong></div>
+                    <div class="col-xs-8">
+                      <div class="row">
+                        <div class="col-xs-8">Verified</div>
+                        <div class="col-xs-4">{{ training_set.criteria_weights.verified|floatformat:2 }}</div>
+                      </div>
+                      <div class="row">
+                        <div class="col-xs-8">Age</div>
+                        <div class="col-xs-4">{{ training_set.criteria_weights.review_age|floatformat:2 }}</div>
+                      </div>
+                      <div class="row">
+                        <div class="col-xs-8">Votes</div>
+                        <div class="col-xs-4">{{ training_set.criteria_weights.vote_confidence|floatformat:2 }}</div>
+                      </div>
+                      <div class="row">
+                        <div class="col-xs-8">Rank</div>
+                        <div class="col-xs-4">{{ training_set.criteria_weights.relative_rank|floatformat:2 }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="list-group-item">
+                  <div class="row">
+                    <div class="col-xs-12">{% for p in training_set.training_products.all %}{% if not forloop.first %},{% endif %} <a href="/search/{{ p.asin }}">{{ p.asin }}</a>{% endfor %}</div>
+                  </div>
+                </div>
+              </div>
+            {% empty %}
+              <div class="list-group training-set">
+                <div class="list-group-item">
+                  No training sets found.
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" id="products">
+      <div class="row search-area">
+        <div class="col-xs-12">
+          <form class="train-form form-inline" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="op-type" value="train">
+            <div class="input-field">
+              <button type="submit" class="search-submit btn btn-lg btn-warning">Train</button>
+              <input type="text" id="search-input" class="train-input form-control input-lg" name="new-asin" placeholder="Enter new ASINs not in the list (e.g. B00SM99KWU, B011LZY20G)">
+            </div>
+            <div class="list-group product-list">
+              <div class="list-group-item list-group-header">
+                <div class="row">
+                  <div class="col-xs-1">
+                    <input type="checkbox" class="select-all">
+                  </div>
+                  <div class="col-xs-2">ASIN</div>
+                  <div class="col-xs-6">Product</div>
+                  <div class="col-xs-1">Reviews</div>
+                  <div class="col-xs-1">Average</div>
+                  <div class="col-xs-1">Amazon</div>
+                </div>
+              </div>
+              {% for product in products %}
+                <div class="list-group-item product-item">
+                  <div class="row">
+                    <div class="col-xs-1">
+                      <input class="select-product" type="checkbox" name="asin" value="{{ product.asin }}">
+                    </div>
+                    <div class="col-xs-2"><div>{{ product.asin }}</div></div>
+                    <div class="col-xs-6"><a href="/search/{{ product.asin }}/">{{ product.title }}</a></div>
+                    <div class="col-xs-1">
+                      {{ product.reviews.count }}
+                    </div>
+                    <div class="col-xs-1">
+                      <span class="icon-gold glyphicon glyphicon-star"></span>
+                      {{ product.average_rating|floatformat:2 }}
+                    </div>
+                    <div class="col-xs-1">
+                      <span class="icon-gold glyphicon glyphicon-star"></span>
+                      {{ product.amazon_rating|floatformat:2 }}
+                    </div>
+                  </div>
+                </div>
+              {% empty %}
+                <div class="list-group-item product-item">
+                  No recent products.
+                </div>
+              {% endfor %}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

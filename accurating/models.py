@@ -35,7 +35,8 @@ class Product(models.Model):
   weighted_rating = models.FloatField(null=True, blank=True, default=None)
   error = models.FloatField(null=True, blank=True, default=None)
   within_target = models.BooleanField(default=False)
-  training_set = models.ForeignKey('TrainingSet', null=True, default=None)
+  training_set = models.ForeignKey('TrainingSet', on_delete=models.SET_NULL,
+                                   null=True, default=None)
 
   @classmethod
   @common.timer
@@ -54,7 +55,7 @@ class Product(models.Model):
     product = None
     try:
       product = self.objects.get(asin=asin)
-      latest = TrainingSet.objects.filter(success=True).latest('end_timestamp')
+      latest = TrainingSet.objects.get(active=True)
       if not product.training_set or product.training_set.id != latest.id:
         print 'Setting weighted rating based on latest training set...'
         product.set_weighted_rating(training_set=latest)
@@ -133,7 +134,7 @@ class Product(models.Model):
   def set_weighted_rating(self, training_set=None):
     """Computes and sets the weighted rating if it was successful."""
     try:
-      training_set = (training_set or TrainingSet.objects.filter(success=True)
+      training_set = (training_set or TrainingSet.objects.filter(active=True)
                       .latest('end_timestamp'))
     except TrainingSet.DoesNotExist:
       print 'Could not retrieve latest successful TrainingSet.'
@@ -293,6 +294,7 @@ class TrainingSet(models.Model):
   _criteria_weights = models.TextField(null=True)
   training_products = models.ManyToManyField('Product')
   success = models.BooleanField(default=False)
+  active = models.BooleanField(default=False)
 
   @property
   def criteria_weights(self):
