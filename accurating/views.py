@@ -6,6 +6,8 @@ from django import http, shortcuts
 
 
 def search_view(request, **kwargs):
+  if 'asin' in request.GET:
+    return shortcuts.redirect(results_view, asin=request.GET.get('asin'))
   context = {
       'view_template': 'search.html',
       'products': models.Product.objects.all()
